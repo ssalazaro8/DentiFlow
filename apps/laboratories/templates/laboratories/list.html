@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorios Dentales - DentiFlow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; }
+        h1 { color: #2c3e50; }
+        .btn { display: inline-block; padding: 8px 16px; background-color: #3498db; color: white; text-decoration: none; border-radius: 4px; margin-bottom: 15px; }
+        .btn:hover { background-color: #2980b9; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #2c3e50; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        .badge { background-color: #2ecc71; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+
+    <h1>Laboratorios Dentales Registrados</h1>
+    <a href="{% url 'laboratory_create' %}" class="btn">+ Registrar Nuevo Laboratorio</a>
+    <a href="{% url 'laboratory_search' %}" class="btn" style="background-color: #e67e22;">🔍 Buscar Laboratorio</a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Servicio</th>
+                <th>Ciudad</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Calificación</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lab in laboratories %}
+            <tr>
+                <td><strong>{{ lab.name }}</strong></td>
+                <td>{{ lab.get_service_display }}</td>
+                <td>{{ lab.city }}</td>
+                <td>{{ lab.phone }}</td>
+                <td>{{ lab.email }}</td>
+                <td>⭐ {{ lab.rating }}</td>
+                <td><span class="badge">Activo</span></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center;">No hay laboratorios registrados actualmente.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
