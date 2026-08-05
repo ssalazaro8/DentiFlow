@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.documents',
     'apps.inventory',
     'apps.common',
+    'apps.workflow',
 
 ]
 
