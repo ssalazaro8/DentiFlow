@@ -9,7 +9,7 @@ class LaboratorySelector:
         return Laboratory.objects.filter(is_active=True)
 
     @staticmethod
-    def search(city=None, service=None):
+    def search(city=None, service=None, min_rating=None):
         # Empieza filtrando los activos
         queryset = Laboratory.objects.filter(is_active=True)
 
@@ -20,5 +20,8 @@ class LaboratorySelector:
         # Si el usuario seleccionó un servicio, filtra por ese servicio exacto
         if service:
             queryset = queryset.filter(service=service)
+
+        if min_rating:
+            queryset = queryset.filter(rating__gte=min_rating)
 
         return queryset

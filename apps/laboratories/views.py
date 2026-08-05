@@ -21,7 +21,8 @@ def laboratory_search(request):
     """Filtra laboratorios según lo que el usuario busque en la URL."""
     city = request.GET.get("city")
     service = request.GET.get("service")
-    laboratories = LaboratoryService.search(city=city, service=service)
+    min_rating = request.GET.get("min_rating")
+    laboratories = LaboratoryService.search(city=city, service=service, min_rating=min_rating)
 
     return render(
         request,

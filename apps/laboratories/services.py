@@ -10,9 +10,9 @@ class LaboratoryService:
         return LaboratorySelector.get_all()
 
     @staticmethod
-    def search(city=None, service=None):
+    def search(city=None, service=None, min_rating=None):
         # Llama al selector para buscar
-        return LaboratorySelector.search(city=city, service=service)
+        return LaboratorySelector.search(city=city, service=service, min_rating=min_rating)
 
     @staticmethod
     def create(data):
