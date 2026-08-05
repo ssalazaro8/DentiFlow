@@ -31,12 +31,23 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+
+    # Django Apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # DentiFlow Apps
+    'apps.accounts',
+    'apps.clinics',
+    'apps.dental_cases',
+    'apps.documents',
+    'apps.inventory',
+    'apps.common',
+
 ]
 
 MIDDLEWARE = [
