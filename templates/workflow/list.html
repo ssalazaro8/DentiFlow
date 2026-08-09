@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dental Cases Workflow</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .create-button {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 25px;
+        }
+
+        .workflow-card {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Received */
+.status-received {
+    background-color: #e0e0e0;
+    color: #333333;
+}
+
+/* 3D Design */
+.status-design {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+/* Printing / Milling */
+.status-printing {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* Quality Control */
+.status-qc {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* Shipped */
+.status-shipped {
+    background-color: #e0ccff;
+    color: #5a189a;
+}
+    </style>
+</head>
+
+<body>
+
+    <h1>Dental Cases Workflow</h1>
+
+    <a class="create-button" href="{% url 'workflow_create' %}">
+        Create Workflow
+    </a>
+    <form method="get">
+
+    <input
+        type="text"
+        name="case_number"
+        placeholder="Search by case number"
+        value="{{ case_number }}"
+    >
+
+    <button type="submit">
+        Search
+    </button>
+
+    <a href="{% url 'workflow_list' %}">
+        Clear
+    </a>
+
+</form>
+
+    {% for workflow in workflows %}
+
+        <div class="workflow-card">
+
+            <h2>
+                Case: {{ workflow.case_number }}
+            </h2>
+
+            <p>
+                <strong>Status:</strong>
+
+                {% if workflow.current_stage == "RECEIVED" %}
+
+    <span class="status status-received">
+        {{ workflow.get_current_stage_display }}
+    </span>
+
+{% elif workflow.current_stage == "DESIGN" %}
+
+    <span class="status status-design">
+        {{ workflow.get_current_stage_display }}
+    </span>
+
+{% elif workflow.current_stage == "PRINTING" %}
+
+    <span class="status status-printing">
+        {{ workflow.get_current_stage_display }}
+    </span>
+
+{% elif workflow.current_stage == "QC" %}
+
+    <span class="status status-qc">
+        {{ workflow.get_current_stage_display }}
+    </span>
+
+{% elif workflow.current_stage == "SHIPPED" %}
+
+    <span class="status status-shipped">
+        {{ workflow.get_current_stage_display }}
+    </span>
+
+{% endif %}
+            </p>
+
+            <p class="comments">
+                <strong>Comments:</strong>
+                {{ workflow.comments }}
+            </p>
+
+            <p>
+                <strong>Last updated:</strong>
+                {{ workflow.updated_at }}
+            </p>
+            <a href="{% url 'workflow_update_stage' workflow.id %}">
+    Update Status
+</a>
+
+        </div>
+
+    {% empty %}
+
+        <div class="workflow-card">
+            <p>No workflows available.</p>
+        </div>
+
+    {% endfor %}
+
+</body>
+</html>
