@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory</title>
+</head>
+<body>
+
+    <h1>Laboratory Inventory</h1>
+
+    {% if materials %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Stock</th>
+                    <th>Unit</th>
+                    <th>Reorder Level</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for material in materials %}
+                    <tr>
+                        <td>{{ material.name }}</td>
+                        <td>{{ material.stock_quantity }}</td>
+                        <td>{{ material.get_unit_type_display }}</td>
+                        <td>{{ material.reorder_level }}</td>
+                        <td>
+                            <a href="{% url 'material_update_stock' material.id %}">
+                                Update Stock
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% else %}
+        <p>No materials registered.</p>
+    {% endif %}
+
+</body>
+</html>
