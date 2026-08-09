@@ -4,17 +4,33 @@ from . import views
 
 
 urlpatterns = [
-
     path(
         "",
         views.dental_case_list,
-        name="dental_case_list"
+        name="dental_case_list",
     ),
 
     path(
         "create/",
         views.dental_case_create,
-        name="dental_case_create"
+        name="dental_case_create",
     ),
 
+    path(
+        "<int:case_id>/",
+        views.dental_case_detail,
+        name="dental_case_detail",
+    ),
+
+    path(
+        "<int:case_id>/edit/",
+        views.dental_case_edit,
+        name="dental_case_edit",
+    ),
+
+    path(
+        "<int:case_id>/delete/",
+        views.dental_case_delete,
+        name="dental_case_delete",
+    ),
 ]

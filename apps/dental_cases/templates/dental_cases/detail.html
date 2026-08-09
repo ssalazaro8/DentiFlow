@@ -1,0 +1,223 @@
+{% extends "dental_cases/base.html" %}
+
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h1>
+            {{ dental_case.case_number }}
+        </h1>
+
+        <p class="text-muted mb-0">
+            Dental Work Order
+        </p>
+
+    </div>
+
+
+    <div class="d-flex gap-2">
+
+        <a
+            href="{% url 'dental_case_edit' dental_case.id %}"
+            class="btn btn-warning"
+        >
+            Edit
+        </a>
+
+        <a
+            href="{% url 'dental_case_delete' dental_case.id %}"
+            class="btn btn-danger"
+        >
+            Delete
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="card shadow-sm">
+
+    <div class="card-header">
+
+        <h5 class="mb-0">
+            Work Order Information
+        </h5>
+
+    </div>
+
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-6 mb-4">
+
+                <strong>
+                    Case Number
+                </strong>
+
+                <p class="mb-0">
+                    {{ dental_case.case_number }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+
+                <strong>
+                    Clinic
+                </strong>
+
+                <p class="mb-0">
+                    {{ dental_case.clinic_name }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+
+                <strong>
+                    Requested By
+                </strong>
+
+                <p class="mb-0">
+                    {{ dental_case.requested_by }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+
+                <strong>
+                    Service Type
+                </strong>
+
+                <p class="mb-0">
+                    {{ dental_case.get_service_type_display }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+
+                <strong>
+                    Due Date
+                </strong>
+
+                <p class="mb-0">
+                    {{ dental_case.due_date|date:"M d, Y" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+
+                <strong>
+                    Status
+                </strong>
+
+                <p class="mb-0">
+
+                    <span class="badge bg-primary">
+
+                        {{ dental_case.get_status_display }}
+
+                    </span>
+
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+
+                <strong>
+                    Created At
+                </strong>
+
+                <p class="mb-0">
+                    {{ dental_case.created_at|date:"M d, Y H:i" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+
+                <strong>
+                    Last Updated
+                </strong>
+
+                <p class="mb-0">
+                    {{ dental_case.updated_at|date:"M d, Y H:i" }}
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <hr>
+
+
+        <div class="mb-4">
+
+            <strong>
+                Description
+            </strong>
+
+            <p class="mt-2 mb-0">
+                {{ dental_case.description }}
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <strong>
+                Observations
+            </strong>
+
+            <p class="mt-2 mb-0">
+
+                {% if dental_case.observations %}
+
+                    {{ dental_case.observations }}
+
+                {% else %}
+
+                    No observations.
+
+                {% endif %}
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="mt-4">
+
+    <a
+        href="{% url 'dental_case_list' %}"
+        class="btn btn-secondary"
+    >
+        ← Back to Cases
+    </a>
+
+</div>
+
+{% endblock %}
