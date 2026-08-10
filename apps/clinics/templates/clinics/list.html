@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Dental Clinics</h1>
+
+<a href="{% url 'clinic_create' %}">+ New Clinic</a>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>NIT</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>City</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for clinic in clinics %}
+    <tr>
+      <td>{{ clinic.name }}</td>
+      <td>{{ clinic.nit }}</td>
+      <td>{{ clinic.email }}</td>
+      <td>{{ clinic.phone }}</td>
+      <td>{{ clinic.city }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No clinics registered yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
