@@ -3,10 +3,7 @@ from django import forms
 from .models import DentalCase
 
 
-class DentalCaseBaseForm(forms.ModelForm):
-    """
-    Shared fields and widgets for dental case forms.
-    """
+class DentalCaseCreateForm(forms.ModelForm):
 
     class Meta:
         model = DentalCase
@@ -28,27 +25,23 @@ class DentalCaseBaseForm(forms.ModelForm):
                     "placeholder": "Example: DF-0001",
                 }
             ),
-
             "clinic_name": forms.TextInput(
                 attrs={
                     "class": "form-control",
                     "placeholder": "Dental clinic or office",
                 }
             ),
-
             "requested_by": forms.TextInput(
                 attrs={
                     "class": "form-control",
                     "placeholder": "Dentist requesting the order",
                 }
             ),
-
             "service_type": forms.Select(
                 attrs={
                     "class": "form-select",
                 }
             ),
-
             "description": forms.Textarea(
                 attrs={
                     "class": "form-control",
@@ -58,15 +51,15 @@ class DentalCaseBaseForm(forms.ModelForm):
                     ),
                 }
             ),
-
             "observations": forms.Textarea(
                 attrs={
                     "class": "form-control",
                     "rows": 3,
-                    "placeholder": "Additional observations.",
+                    "placeholder": (
+                        "Additional observations."
+                    ),
                 }
             ),
-
             "due_date": forms.DateInput(
                 attrs={
                     "class": "form-control",
@@ -75,45 +68,13 @@ class DentalCaseBaseForm(forms.ModelForm):
             ),
         }
 
-        labels = {
-            "case_number": "Case Number",
-            "clinic_name": "Clinic",
-            "requested_by": "Requested By",
-            "service_type": "Service Type",
-            "description": "Description",
-            "observations": "Observations",
-            "due_date": "Due Date",
-        }
 
+class DentalCaseUpdateForm(forms.ModelForm):
 
-class DentalCaseCreateForm(DentalCaseBaseForm):
-    """
-    Form used to create a new dental case.
+    class Meta:
+        model = DentalCase
 
-    New cases always start as SUBMITTED.
-    """
-
-    pass
-
-
-class DentalCaseUpdateForm(DentalCaseBaseForm):
-    """
-    Form used to update an existing dental case.
-    """
-
-    status = forms.ChoiceField(
-        choices=DentalCase.Status.choices,
-        widget=forms.Select(
-            attrs={
-                "class": "form-select",
-            }
-        ),
-        label="Status",
-    )
-
-    class Meta(DentalCaseBaseForm.Meta):
         fields = [
-            "case_number",
             "clinic_name",
             "requested_by",
             "service_type",
@@ -122,3 +83,44 @@ class DentalCaseUpdateForm(DentalCaseBaseForm):
             "status",
             "due_date",
         ]
+
+        widgets = {
+            "clinic_name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                }
+            ),
+            "requested_by": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                }
+            ),
+            "service_type": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+            "description": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                }
+            ),
+            "observations": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                }
+            ),
+            "status": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+            "due_date": forms.DateInput(
+                attrs={
+                    "class": "form-control",
+                    "type": "date",
+                }
+            ),
+        }

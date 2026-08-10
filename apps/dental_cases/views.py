@@ -5,7 +5,6 @@ from .forms import (
     DentalCaseCreateForm,
     DentalCaseUpdateForm,
 )
-from .models import DentalCase
 from .services import DentalCaseService
 
 
@@ -47,7 +46,7 @@ def dental_case_create(request):
                 (
                     f"Dental case "
                     f"{dental_case.case_number} "
-                    f"was created successfully."
+                    "was created successfully."
                 ),
             )
 
@@ -71,7 +70,7 @@ def dental_case_create(request):
 
 def dental_case_detail(request, case_id):
     """
-    Displays a dental case.
+    Displays a dental case and its related files.
     """
 
     dental_case = DentalCaseService.get_by_id(
@@ -79,6 +78,7 @@ def dental_case_detail(request, case_id):
     )
 
     if dental_case is None:
+
         messages.error(
             request,
             "Dental case not found.",
@@ -88,11 +88,14 @@ def dental_case_detail(request, case_id):
             "dental_case_list"
         )
 
+    case_files = dental_case.files.all()
+
     return render(
         request,
         "dental_cases/detail.html",
         {
             "dental_case": dental_case,
+            "case_files": case_files,
         },
     )
 
@@ -107,6 +110,7 @@ def dental_case_edit(request, case_id):
     )
 
     if dental_case is None:
+
         messages.error(
             request,
             "Dental case not found.",
@@ -146,7 +150,7 @@ def dental_case_edit(request, case_id):
                     (
                         f"Dental case "
                         f"{dental_case.case_number} "
-                        f"was updated successfully."
+                        "was updated successfully."
                     ),
                 )
 
@@ -181,6 +185,7 @@ def dental_case_delete(request, case_id):
     )
 
     if dental_case is None:
+
         messages.error(
             request,
             "Dental case not found.",
@@ -203,7 +208,7 @@ def dental_case_delete(request, case_id):
             (
                 f"Dental case "
                 f"{case_number} "
-                f"was deleted successfully."
+                "was deleted successfully."
             ),
         )
 

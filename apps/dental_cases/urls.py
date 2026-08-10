@@ -1,9 +1,10 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 
 
 urlpatterns = [
+
     path(
         "",
         views.dental_case_list,
@@ -32,5 +33,12 @@ urlpatterns = [
         "<int:case_id>/delete/",
         views.dental_case_delete,
         name="dental_case_delete",
+    ),
+
+    path(
+        "<int:case_id>/files/",
+        include(
+            "apps.documents.urls"
+        ),
     ),
 ]

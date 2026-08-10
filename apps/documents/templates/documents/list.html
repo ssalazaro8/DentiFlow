@@ -1,0 +1,153 @@
+{% extends "dental_cases/base.html" %}
+
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h1>
+            Case Files
+        </h1>
+
+        <p class="text-muted mb-0">
+
+            {{ dental_case.case_number }}
+            ·
+            {{ dental_case.clinic_name }}
+
+        </p>
+
+    </div>
+
+
+    <a
+        href="{% url 'case_file_upload' dental_case.id %}"
+        class="btn btn-primary"
+    >
+        + Upload Files
+    </a>
+
+</div>
+
+
+{% if files %}
+
+    <div class="card shadow-sm">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>
+                            File
+                        </th>
+
+                        <th>
+                            Category
+                        </th>
+
+                        <th>
+                            Uploaded
+                        </th>
+
+                        <th class="text-end">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for case_file in files %}
+
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    {{ case_file.original_name }}
+                                </strong>
+                            </td>
+
+
+                            <td>
+
+                                <span class="badge bg-secondary">
+
+                                    {{ case_file.get_category_display }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                {{ case_file.uploaded_at|date:"M d, Y H:i" }}
+
+                            </td>
+
+
+                            <td class="text-end">
+
+                                <a
+                                    href="{% url 'case_file_download' dental_case.id case_file.id %}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    Download
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+{% else %}
+
+    <div class="card shadow-sm">
+
+        <div class="card-body text-center py-5">
+
+            <h5>
+                No files uploaded
+            </h5>
+
+            <p class="text-muted">
+
+                This dental case does not have
+                any digital files yet.
+
+            </p>
+
+
+            <a
+                href="{% url 'case_file_upload' dental_case.id %}"
+                class="btn btn-primary"
+            >
+                Upload First File
+            </a>
+
+        </div>
+
+    </div>
+
+{% endif %}
+
+{% endblock %}

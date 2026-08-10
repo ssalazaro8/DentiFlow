@@ -27,6 +27,7 @@
             Edit
         </a>
 
+
         <a
             href="{% url 'dental_case_delete' dental_case.id %}"
             class="btn btn-danger"
@@ -39,7 +40,7 @@
 </div>
 
 
-<div class="card shadow-sm">
+<div class="card shadow-sm mb-4">
 
     <div class="card-header">
 
@@ -203,6 +204,164 @@
             </p>
 
         </div>
+
+    </div>
+
+</div>
+
+
+<!-- CASE FILES -->
+
+<div class="card shadow-sm mb-4">
+
+    <div
+        class="card-header d-flex justify-content-between align-items-center"
+    >
+
+        <h5 class="mb-0">
+            Case Files
+        </h5>
+
+
+        <a
+            href="{% url 'case_file_upload' dental_case.id %}"
+            class="btn btn-primary btn-sm"
+        >
+            + Upload Files
+        </a>
+
+    </div>
+
+
+    <div class="card-body">
+
+        {% if case_files %}
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>
+                                File
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                Uploaded
+                            </th>
+
+                            <th class="text-end">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for case_file in case_files %}
+
+                            <tr>
+
+                                <td>
+
+                                    <strong>
+                                        {{ case_file.original_name }}
+                                    </strong>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="badge bg-secondary">
+
+                                        {{ case_file.get_category_display }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    {{ case_file.uploaded_at|date:"M d, Y H:i" }}
+
+                                </td>
+
+
+                                <td class="text-end">
+
+                                    <div
+                                        class="d-flex justify-content-end gap-2"
+                                    >
+
+                                        <a
+                                            href="{% url 'case_file_download' dental_case.id case_file.id %}"
+                                            class="btn btn-sm btn-outline-primary"
+                                        >
+                                            Download
+                                        </a>
+
+
+                                        <a
+                                            href="{% url 'case_file_delete' dental_case.id case_file.id %}"
+                                            class="btn btn-sm btn-outline-danger"
+                                        >
+                                            Delete
+                                        </a>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="text-center py-4">
+
+                <h6>
+                    No files uploaded
+                </h6>
+
+                <p class="text-muted mb-3">
+
+                    Upload the STL files, X-rays,
+                    photographs, prescriptions or
+                    supporting documents related
+                    to this dental case.
+
+                </p>
+
+
+                <a
+                    href="{% url 'case_file_upload' dental_case.id %}"
+                    class="btn btn-outline-primary"
+                >
+                    Upload First File
+                </a>
+
+            </div>
+
+        {% endif %}
 
     </div>
 
