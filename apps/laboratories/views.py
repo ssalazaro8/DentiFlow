@@ -3,10 +3,11 @@ from django.shortcuts import render
 # Create your views here.
 
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from .forms import LaboratoryForm
 from .services import LaboratoryService
 
-
+@login_required
 def laboratory_list(request):
     """Muestra la lista de todos los laboratorios."""
     laboratories = LaboratoryService.get_all()
@@ -16,7 +17,7 @@ def laboratory_list(request):
         {"laboratories": laboratories}
     )
 
-
+@login_required
 def laboratory_search(request):
     """Filtra laboratorios según lo que el usuario busque en la URL."""
     city = request.GET.get("city")
@@ -30,7 +31,7 @@ def laboratory_search(request):
         {"laboratories": laboratories}
     )
 
-
+@login_required
 def laboratory_create(request):
     """Muestra el formulario y procesa la creación de un nuevo laboratorio."""
     if request.method == "POST":
