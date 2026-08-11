@@ -1,0 +1,200 @@
+{% extends "dental_cases/base.html" %}
+
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h1 class="mb-1">
+            Dental Cases
+        </h1>
+
+        <p class="text-muted mb-0">
+            Manage dental work orders throughout their lifecycle.
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'dental_case_create' %}"
+        class="btn btn-primary"
+    >
+        + New Case
+    </a>
+
+</div>
+
+
+{% if dental_cases %}
+
+<div class="card shadow-sm">
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>Case</th>
+
+                        <th>Clinic</th>
+
+                        <th>Requested By</th>
+
+                        <th>Service</th>
+
+                        <th>Status</th>
+
+                        <th>Due Date</th>
+
+                        <th class="text-end">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for case in dental_cases %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                {{ case.case_number }}
+                            </strong>
+                        </td>
+
+
+                        <td>
+                            {{ case.clinic_name }}
+                        </td>
+
+
+                        <td>
+                            {{ case.requested_by }}
+                        </td>
+
+
+                        <td>
+                            {{ case.get_service_type_display }}
+                        </td>
+
+
+                        <td>
+
+                            {% if case.status == "SUBMITTED" %}
+
+                                <span class="badge bg-secondary">
+                                    {{ case.get_status_display }}
+                                </span>
+
+                            {% elif case.status == "IN_REVIEW" %}
+
+                                <span class="badge bg-info text-dark">
+                                    {{ case.get_status_display }}
+                                </span>
+
+                            {% elif case.status == "IN_PROGRESS" %}
+
+                                <span class="badge bg-primary">
+                                    {{ case.get_status_display }}
+                                </span>
+
+                            {% elif case.status == "COMPLETED" %}
+
+                                <span class="badge bg-success">
+                                    {{ case.get_status_display }}
+                                </span>
+
+                            {% elif case.status == "DELIVERED" %}
+
+                                <span class="badge bg-dark">
+                                    {{ case.get_status_display }}
+                                </span>
+
+                            {% elif case.status == "CANCELLED" %}
+
+                                <span class="badge bg-danger">
+                                    {{ case.get_status_display }}
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+                            {{ case.due_date|date:"M d, Y" }}
+                        </td>
+
+
+                        <td class="text-end">
+
+                            <a
+                                href="{% url 'dental_case_detail' case.id %}"
+                                class="btn btn-sm btn-outline-primary"
+                            >
+                                View
+                            </a>
+
+                            <a
+                                href="{% url 'dental_case_edit' case.id %}"
+                                class="btn btn-sm btn-outline-warning"
+                            >
+                                Edit
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% else %}
+
+<div class="card shadow-sm">
+
+    <div class="card-body text-center py-5">
+
+        <h4>
+            No dental cases registered
+        </h4>
+
+        <p class="text-muted">
+            Start by creating the first dental work order.
+        </p>
+
+        <a
+            href="{% url 'dental_case_create' %}"
+            class="btn btn-primary"
+        >
+            Create Dental Case
+        </a>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

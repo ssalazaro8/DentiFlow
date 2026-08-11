@@ -1,0 +1,241 @@
+{% extends "dental_cases/base.html" %}
+
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-8">
+
+        <div class="mb-4">
+
+            <h1>
+                Create Dental Case
+            </h1>
+
+            <p class="text-muted">
+                Register a new dental work order.
+            </p>
+
+        </div>
+
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+
+                    {% if form.non_field_errors %}
+
+                        <div class="alert alert-danger">
+
+                            {{ form.non_field_errors }}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label
+                                for="{{ form.case_number.id_for_label }}"
+                                class="form-label"
+                            >
+                                Case Number
+                            </label>
+
+                            {{ form.case_number }}
+
+                            {% for error in form.case_number.errors %}
+
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+
+                            <label
+                                for="{{ form.clinic_name.id_for_label }}"
+                                class="form-label"
+                            >
+                                Clinic
+                            </label>
+
+                            {{ form.clinic_name }}
+
+                            {% for error in form.clinic_name.errors %}
+
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mb-3">
+
+                        <label
+                            for="{{ form.requested_by.id_for_label }}"
+                            class="form-label"
+                        >
+                            Requested By
+                        </label>
+
+                        {{ form.requested_by }}
+
+                        {% for error in form.requested_by.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label
+                                for="{{ form.service_type.id_for_label }}"
+                                class="form-label"
+                            >
+                                Service Type
+                            </label>
+
+                            {{ form.service_type }}
+
+                            {% for error in form.service_type.errors %}
+
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+
+                            <label
+                                for="{{ form.due_date.id_for_label }}"
+                                class="form-label"
+                            >
+                                Due Date
+                            </label>
+
+                            {{ form.due_date }}
+
+                            {% for error in form.due_date.errors %}
+
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mb-3">
+
+                        <label
+                            for="{{ form.description.id_for_label }}"
+                            class="form-label"
+                        >
+                            Description
+                        </label>
+
+                        {{ form.description }}
+
+                        {% for error in form.description.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="mb-4">
+
+                        <label
+                            for="{{ form.observations.id_for_label }}"
+                            class="form-label"
+                        >
+                            Observations
+                        </label>
+
+                        {{ form.observations }}
+
+                        {% for error in form.observations.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="alert alert-info">
+
+                        New dental cases are automatically created with
+                        <strong>Submitted</strong> status.
+
+                    </div>
+
+
+                    <div class="d-flex gap-2">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Create Case
+                        </button>
+
+                        <a
+                            href="{% url 'dental_case_list' %}"
+                            class="btn btn-secondary"
+                        >
+                            Cancel
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
