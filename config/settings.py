@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-xr!-7ec--mjlvere4$$b44_6^ban^0-*2wi(o(nj4fu(28lzec
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'apps.inventory',
     'apps.common',
     'apps.workflow',
-
+    'apps.laboratories',
 ]
 
 MIDDLEWARE = [
@@ -132,3 +132,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuración de Autenticación
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'laboratory_list'
+LOGOUT_REDIRECT_URL = 'login'
