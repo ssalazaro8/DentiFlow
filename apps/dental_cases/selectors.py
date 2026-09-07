@@ -8,14 +8,14 @@ class DentalCaseSelector:
         """
         Returns all dental cases.
         """
-        return DentalCase.objects.all()
+        return DentalCase.objects.select_related("laboratory").prefetch_related("technician_assignment__technician")
 
     @staticmethod
     def get_by_id(case_id):
         """
         Returns a dental case by primary key.
         """
-        return DentalCase.objects.filter(
+        return DentalCase.objects.select_related("laboratory").prefetch_related("technician_assignment__technician").filter(
             id=case_id
         ).first()
 

@@ -67,15 +67,15 @@
                         <div class="col-md-6 mb-3">
 
                             <label
-                                for="{{ form.clinic_name.id_for_label }}"
+                                for="{{ form.clinic.id_for_label }}"
                                 class="form-label"
                             >
                                 Clinic
                             </label>
 
-                            {{ form.clinic_name }}
+                            {{ form.clinic }}
 
-                            {% for error in form.clinic_name.errors %}
+                            {% for error in form.clinic.errors %}
 
                                 <div class="text-danger small mt-1">
                                     {{ error }}
@@ -100,6 +100,31 @@
                         {{ form.requested_by }}
 
                         {% for error in form.requested_by.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label
+                            for="{{ form.laboratory.id_for_label }}"
+                            class="form-label"
+                        >
+                            Select laboratory
+                        </label>
+
+                        {{ form.laboratory }}
+
+                        <div class="form-text">
+                            Only the selected laboratory will receive and be able to review this case.
+                        </div>
+
+                        {% for error in form.laboratory.errors %}
 
                             <div class="text-danger small mt-1">
                                 {{ error }}

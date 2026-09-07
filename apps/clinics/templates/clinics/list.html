@@ -13,6 +13,7 @@
       <th>Email</th>
       <th>Phone</th>
       <th>City</th>
+      <th>Cases</th>
     </tr>
   </thead>
   <tbody>
@@ -23,9 +24,10 @@
       <td>{{ clinic.email }}</td>
       <td>{{ clinic.phone }}</td>
       <td>{{ clinic.city }}</td>
+      <td><a href="{% url 'clinic_case_inbox' clinic.id %}" class="button">View cases</a></td>
     </tr>
     {% empty %}
-    <tr><td colspan="5">No clinics registered yet.</td></tr>
+    <tr><td colspan="6">No clinics registered yet.</td></tr>
     {% endfor %}
   </tbody>
 </table>

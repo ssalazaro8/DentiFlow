@@ -1,4 +1,7 @@
 from django.db import models
+from django.conf import settings
+from apps.laboratories.models import Laboratory
+from apps.clinics.models import Clinic
 
 
 class DentalCase(models.Model):
@@ -10,6 +13,12 @@ class DentalCase(models.Model):
         COMPLETED = "COMPLETED", "Completed"
         DELIVERED = "DELIVERED", "Delivered"
         CANCELLED = "CANCELLED", "Cancelled"
+        REJECTED = "REJECTED", "Rejected"
+
+    class AcceptanceStatus(models.TextChoices):
+        PENDING = "PENDING", "Pending laboratory decision"
+        ACCEPTED = "ACCEPTED", "Accepted"
+        REJECTED = "REJECTED", "Rejected"
 
     SERVICE_TYPES = [
         ("CROWN", "Dental Crown"),
@@ -35,6 +44,43 @@ class DentalCase(models.Model):
         max_length=150,
         verbose_name="Requested By",
     )
+
+    clinic = models.ForeignKey(
+        Clinic,
+        on_delete=models.PROTECT,
+        related_name="dental_cases",
+        null=True,
+        blank=True,
+    )
+
+    laboratory = models.ForeignKey(
+        Laboratory,
+        on_delete=models.PROTECT,
+        related_name="dental_cases",
+        null=True,
+        blank=True,
+        verbose_name="Destination laboratory",
+    )
+
+    # The clinic/dentist account that submitted this private case.
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="submitted_dental_cases",
+        null=True,
+        blank=True,
+    )
+
+    acceptance_status = models.CharField(
+        max_length=12,
+        choices=AcceptanceStatus.choices,
+        default=AcceptanceStatus.PENDING,
+        verbose_name="Laboratory decision",
+    )
+
+    rejection_reason = models.TextField(blank=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    rejected_at = models.DateTimeField(null=True, blank=True)
 
     service_type = models.CharField(
         max_length=20,
@@ -79,3 +125,23 @@ class DentalCase(models.Model):
 
     def __str__(self):
         return self.case_number
+
+
+class TechnicianAssignment(models.Model):
+    """The current technician assigned to an accepted dental case."""
+
+    dental_case = models.OneToOneField(
+        DentalCase,
+        on_delete=models.CASCADE,
+        related_name="technician_assignment",
+    )
+    technician = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="technician_assignments",
+    )
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.dental_case.case_number} - {self.technician}"

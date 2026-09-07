@@ -1,6 +1,7 @@
 from django.db import transaction
+from django.utils import timezone
 
-from .models import DentalCase
+from .models import DentalCase, TechnicianAssignment
 from .selectors import DentalCaseSelector
 
 
@@ -8,8 +9,9 @@ class DentalCaseService:
 
     STATUS_TRANSITIONS = {
         DentalCase.Status.SUBMITTED: {
-            DentalCase.Status.IN_REVIEW,
+            DentalCase.Status.IN_PROGRESS,
             DentalCase.Status.CANCELLED,
+            DentalCase.Status.REJECTED,
         },
 
         DentalCase.Status.IN_REVIEW: {
@@ -29,6 +31,7 @@ class DentalCaseService:
         DentalCase.Status.DELIVERED: set(),
 
         DentalCase.Status.CANCELLED: set(),
+        DentalCase.Status.REJECTED: set(),
     }
 
     @staticmethod
@@ -59,7 +62,7 @@ class DentalCaseService:
 
     @staticmethod
     @transaction.atomic
-    def create(data):
+    def create(data, created_by=None):
         """
         Creates a new dental case.
 
@@ -69,6 +72,10 @@ class DentalCaseService:
         data = data.copy()
 
         data["status"] = DentalCase.Status.SUBMITTED
+        if data.get("clinic"):
+            data["clinic_name"] = data["clinic"].name
+        if created_by is not None:
+            data["created_by"] = created_by
 
         return DentalCase.objects.create(
             **data
@@ -143,6 +150,60 @@ class DentalCaseService:
             ]
         )
 
+        return case
+
+    @staticmethod
+    @transaction.atomic
+    def accept(case):
+        if case.acceptance_status != DentalCase.AcceptanceStatus.PENDING:
+            raise ValueError("This case has already received a laboratory decision.")
+        case.acceptance_status = DentalCase.AcceptanceStatus.ACCEPTED
+        case.accepted_at = timezone.now()
+        case.rejection_reason = ""
+        case.save(update_fields=["acceptance_status", "accepted_at", "rejection_reason", "updated_at"])
+        return case
+
+    @staticmethod
+    @transaction.atomic
+    def reject(case, reason):
+        if case.acceptance_status != DentalCase.AcceptanceStatus.PENDING:
+            raise ValueError("This case has already received a laboratory decision.")
+        if not reason or not reason.strip():
+            raise ValueError("A reason is required to reject a dental case.")
+        case.acceptance_status = DentalCase.AcceptanceStatus.REJECTED
+        case.rejection_reason = reason.strip()
+        case.rejected_at = timezone.now()
+        case.status = DentalCase.Status.REJECTED
+        case.save(update_fields=["acceptance_status", "rejection_reason", "rejected_at", "status", "updated_at"])
+        return case
+
+    @staticmethod
+    @transaction.atomic
+    def assign_technician(case, technician):
+        if case.acceptance_status != DentalCase.AcceptanceStatus.ACCEPTED:
+            raise ValueError("Only an accepted case can be assigned to a technician.")
+        if not case.laboratory or not case.laboratory.technicians.filter(pk=technician.pk).exists():
+            raise ValueError("The selected technician does not belong to this laboratory.")
+        assignment, _ = TechnicianAssignment.objects.update_or_create(
+            dental_case=case,
+            defaults={"technician": technician},
+        )
+        return assignment
+
+    @staticmethod
+    @transaction.atomic
+    def remove_technician_assignment(case):
+        TechnicianAssignment.objects.filter(dental_case=case).delete()
+
+    @staticmethod
+    @transaction.atomic
+    def start_production(case):
+        if case.acceptance_status != DentalCase.AcceptanceStatus.ACCEPTED:
+            raise ValueError("Production can only begin after laboratory acceptance.")
+        if not hasattr(case, "technician_assignment"):
+            raise ValueError("Assign a technician before starting production.")
+        if case.status == DentalCase.Status.SUBMITTED:
+            return DentalCaseService.update_status(case, DentalCase.Status.IN_PROGRESS)
         return case
 
     @staticmethod
