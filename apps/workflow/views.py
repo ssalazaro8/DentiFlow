@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
 from .forms import WorkflowForm
@@ -22,13 +23,17 @@ def workflow_list(request):
         }
     )
 
+
+@login_required
 def workflow_create(request):
 
     if request.method == "POST":
         form = WorkflowForm(request.POST)
 
         if form.is_valid():
-            WorkflowService.create(form.cleaned_data)
+            WorkflowService.create(
+                form.cleaned_data
+            )
 
             return redirect("workflow_list")
 
@@ -44,6 +49,7 @@ def workflow_create(request):
     )
 
 
+@login_required
 def workflow_update_stage(request, id):
 
     workflow = WorkflowService.get_by_id(id)
@@ -54,7 +60,8 @@ def workflow_update_stage(request, id):
 
         WorkflowService.update_stage(
             workflow,
-            stage
+            stage,
+            request.user
         )
 
         return redirect("workflow_list")
@@ -64,5 +71,24 @@ def workflow_update_stage(request, id):
         "workflow/update.html",
         {
             "workflow": workflow
+        }
+    )
+
+
+@login_required
+def workflow_history(request, id):
+
+    workflow = WorkflowService.get_by_id(id)
+
+    history = WorkflowService.get_status_history(
+        workflow
+    )
+
+    return render(
+        request,
+        "workflow/history.html",
+        {
+            "workflow": workflow,
+            "history": history
         }
     )

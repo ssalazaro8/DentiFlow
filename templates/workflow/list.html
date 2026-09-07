@@ -36,42 +36,42 @@
         }
 
         .status {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-weight: bold;
-    font-size: 14px;
-}
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
 
-/* Received */
-.status-received {
-    background-color: #e0e0e0;
-    color: #333333;
-}
+        /* Received */
+        .status-received {
+            background-color: #e0e0e0;
+            color: #333333;
+        }
 
-/* 3D Design */
-.status-design {
-    background-color: #cce5ff;
-    color: #004085;
-}
+        /* 3D Design */
+        .status-design {
+            background-color: #cce5ff;
+            color: #004085;
+        }
 
-/* Printing / Milling */
-.status-printing {
-    background-color: #fff3cd;
-    color: #856404;
-}
+        /* Printing / Milling */
+        .status-printing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
 
-/* Quality Control */
-.status-qc {
-    background-color: #d4edda;
-    color: #155724;
-}
+        /* Quality Control */
+        .status-qc {
+            background-color: #d4edda;
+            color: #155724;
+        }
 
-/* Shipped */
-.status-shipped {
-    background-color: #e0ccff;
-    color: #5a189a;
-}
+        /* Shipped */
+        .status-shipped {
+            background-color: #e0ccff;
+            color: #5a189a;
+        }
     </style>
 </head>
 
@@ -82,24 +82,25 @@
     <a class="create-button" href="{% url 'workflow_create' %}">
         Create Workflow
     </a>
+
     <form method="get">
 
-    <input
-        type="text"
-        name="case_number"
-        placeholder="Search by case number"
-        value="{{ case_number }}"
-    >
+        <input
+            type="text"
+            name="case_number"
+            placeholder="Search by case number"
+            value="{{ case_number }}"
+        >
 
-    <button type="submit">
-        Search
-    </button>
+        <button type="submit">
+            Search
+        </button>
 
-    <a href="{% url 'workflow_list' %}">
-        Clear
-    </a>
+        <a href="{% url 'workflow_list' %}">
+            Clear
+        </a>
 
-</form>
+    </form>
 
     {% for workflow in workflows %}
 
@@ -114,35 +115,35 @@
 
                 {% if workflow.current_stage == "RECEIVED" %}
 
-    <span class="status status-received">
-        {{ workflow.get_current_stage_display }}
-    </span>
+                    <span class="status status-received">
+                        {{ workflow.get_current_stage_display }}
+                    </span>
 
-{% elif workflow.current_stage == "DESIGN" %}
+                {% elif workflow.current_stage == "DESIGN" %}
 
-    <span class="status status-design">
-        {{ workflow.get_current_stage_display }}
-    </span>
+                    <span class="status status-design">
+                        {{ workflow.get_current_stage_display }}
+                    </span>
 
-{% elif workflow.current_stage == "PRINTING" %}
+                {% elif workflow.current_stage == "PRINTING" %}
 
-    <span class="status status-printing">
-        {{ workflow.get_current_stage_display }}
-    </span>
+                    <span class="status status-printing">
+                        {{ workflow.get_current_stage_display }}
+                    </span>
 
-{% elif workflow.current_stage == "QC" %}
+                {% elif workflow.current_stage == "QC" %}
 
-    <span class="status status-qc">
-        {{ workflow.get_current_stage_display }}
-    </span>
+                    <span class="status status-qc">
+                        {{ workflow.get_current_stage_display }}
+                    </span>
 
-{% elif workflow.current_stage == "SHIPPED" %}
+                {% elif workflow.current_stage == "SHIPPED" %}
 
-    <span class="status status-shipped">
-        {{ workflow.get_current_stage_display }}
-    </span>
+                    <span class="status status-shipped">
+                        {{ workflow.get_current_stage_display }}
+                    </span>
 
-{% endif %}
+                {% endif %}
             </p>
 
             <p class="comments">
@@ -154,9 +155,14 @@
                 <strong>Last updated:</strong>
                 {{ workflow.updated_at }}
             </p>
+
             <a href="{% url 'workflow_update_stage' workflow.id %}">
-    Update Status
-</a>
+                Update Status
+            </a>
+
+            <a href="{% url 'workflow_history' workflow.id %}">
+                View History
+            </a>
 
         </div>
 

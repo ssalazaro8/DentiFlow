@@ -21,4 +21,11 @@ urlpatterns = [
         views.workflow_update_stage,
         name="workflow_update_stage"
     ),
+
+    path(
+        "<int:id>/history/",
+        views.workflow_history,
+        name="workflow_history"
+    ),
 ]
+
