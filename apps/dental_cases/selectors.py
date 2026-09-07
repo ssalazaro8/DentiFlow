@@ -1,4 +1,5 @@
 from .models import DentalCase
+from django.db.models import Count
 
 
 class DentalCaseSelector:
@@ -45,3 +46,31 @@ class DentalCaseSelector:
         return DentalCase.objects.filter(
             clinic_name__iexact=clinic_name
         )
+
+    @staticmethod
+    def get_dashboard_metrics(user_identifier):
+
+        base_qs = DentalCase.objects.filter(requested_by=user_identifier)
+        
+        pending_cases = base_qs.filter(
+            status__in=[DentalCase.Status.SUBMITTED, DentalCase.Status.IN_REVIEW]
+        ).count()
+        
+        in_progress_cases = base_qs.filter(
+            status=DentalCase.Status.IN_PROGRESS
+        ).count()
+        
+        completed_cases = base_qs.filter(
+            status__in=[DentalCase.Status.COMPLETED, DentalCase.Status.DELIVERED]
+        ).count()
+        
+        # Agrupa y cuenta los casos por cada estado existente
+        cases_by_stage = base_qs.values('status').annotate(total=Count('id'))
+        
+        return {
+            'pending': pending_cases,
+            'in_progress': in_progress_cases,
+            'completed': completed_cases,
+            'total_active': pending_cases + in_progress_cases,
+            'cases_by_stage': list(cases_by_stage)
+        }

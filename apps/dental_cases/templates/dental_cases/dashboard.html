@@ -1,0 +1,88 @@
+{% extends "dental_cases/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Dashboard de Producción</h2>
+    <p class="text-muted">Indicadores en tiempo real</p>
+
+    <!-- ESTE ID ES VITAL PARA EL POLLING -->
+    <div class="row mb-4" id="dashboard-metrics">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Casos Activos</h5>
+                    <h2 class="card-text">{{ total_active }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-dark bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pendientes</h5>
+                    <h2 class="card-text">{{ pending }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">En Proceso</h5>
+                    <h2 class="card-text">{{ in_progress }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Completados</h5>
+                    <h2 class="card-text">{{ completed }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTE ID TAMBIÉN -->
+    <div class="row" id="dashboard-stages">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Casos por Etapa del Workflow
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for stage in cases_by_stage %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ stage.status }}
+                        <span class="badge bg-primary rounded-pill">{{ stage.total }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">No hay casos registrados.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script de Polling -->
+<script>
+    setInterval(() => {
+        fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                const newMetrics = doc.getElementById('dashboard-metrics');
+                const newStages = doc.getElementById('dashboard-stages');
+                
+                if (newMetrics && document.getElementById('dashboard-metrics')) {
+                    document.getElementById('dashboard-metrics').innerHTML = newMetrics.innerHTML;
+                }
+                if (newStages && document.getElementById('dashboard-stages')) {
+                    document.getElementById('dashboard-stages').innerHTML = newStages.innerHTML;
+                }
+            })
+            .catch(error => console.error('Error actualizando:', error));
+    }, 5000);
+</script>
+{% endblock %}
