@@ -1,4 +1,6 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
@@ -10,6 +12,7 @@ from .forms import (
     DentalCaseCreateForm,
     DentalCaseUpdateForm,
 )
+from .selectors import get_case_file_by_id
 
 
 def dental_case_list(request):
@@ -277,3 +280,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
 
         return context
+
+
+# --- FR-24: descarga de archivos adjuntos ---
+
+
+@login_required
+def download_case_file_view(request, file_id: int):
+    case_file = get_case_file_by_id(file_id=file_id)
+
+    if not case_file.file or not case_file.file.storage.exists(case_file.file.name):
+        raise Http404("El archivo solicitado no existe en el servidor.")
+
+    return FileResponse(
+        case_file.file.open("rb"),
+        as_attachment=True,
+        filename=case_file.filename,
+    )

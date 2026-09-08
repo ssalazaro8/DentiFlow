@@ -46,4 +46,11 @@ urlpatterns = [
             "apps.documents.urls"
         ),
     ),
+
+    # FR-24: descarga de archivos adjuntos
+    path(
+        "files/<int:file_id>/download/",
+        views.download_case_file_view,
+        name="download_file",
+    ),
 ]

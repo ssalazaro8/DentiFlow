@@ -1,5 +1,7 @@
-from .models import DentalCase
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
+
+from .models import DentalCase, DentalCaseFile
 
 
 class DentalCaseSelector:
@@ -74,3 +76,9 @@ class DentalCaseSelector:
             'total_active': pending_cases + in_progress_cases,
             'cases_by_stage': list(cases_by_stage)
         }
+
+
+# --- FR-24: acceso a los archivos adjuntos del caso ---
+
+def get_case_file_by_id(*, file_id: int) -> DentalCaseFile:
+    return get_object_or_404(DentalCaseFile, id=file_id)

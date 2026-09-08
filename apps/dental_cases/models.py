@@ -1,3 +1,4 @@
+import os
 from django.db import models
 
 
@@ -77,5 +78,35 @@ class DentalCase(models.Model):
         verbose_name_plural = "Dental Cases"
         ordering = ["-created_at"]
 
-    def __str__(self):
-        return self.case_number
+    def __str__(self) -> str:
+        return str(self.case_number)
+
+
+class DentalCaseFile(models.Model):
+    case = models.ForeignKey(
+        DentalCase,
+        on_delete=models.CASCADE,
+        related_name="case_files",
+        verbose_name="Dental Case",
+    )
+    file = models.FileField(
+        upload_to="case_files/",
+        verbose_name="File",
+    )
+    uploaded_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Uploaded At",
+    )
+
+    class Meta:
+        verbose_name = "Dental Case File"
+        verbose_name_plural = "Dental Case Files"
+
+    def __str__(self) -> str:
+        return f"{self.case.case_number} - {self.filename}"  # pylint: disable=no-member
+
+    @property
+    def filename(self) -> str:
+        if self.file and hasattr(self.file, "name"):
+            return os.path.basename(self.file.name)
+        return ""
