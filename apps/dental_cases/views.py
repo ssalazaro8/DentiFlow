@@ -1,10 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.generic import TemplateView
 
 from apps.laboratories.models import Laboratory
 from apps.clinics.models import Clinic
+
+from .exceptions import DashboardMetricsError
 
 from .forms import (
     DentalCaseCreateForm,
@@ -12,6 +17,7 @@ from .forms import (
     RejectionForm,
     TechnicianAssignmentForm,
 )
+from .selectors import get_case_file_by_id
 from .services import DentalCaseService
 
 
@@ -338,3 +344,71 @@ def technician_assignment_remove(request, case_id):
         DentalCaseService.remove_technician_assignment(dental_case)
         messages.success(request, "Technician assignment removed.")
     return redirect("dental_case_detail", case_id=case_id)
+
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    """
+    Displays the real time production indicators of the laboratory.
+    """
+
+    template_name = "dental_cases/dashboard.html"
+
+    METRICS_ERROR_MESSAGE = (
+        "The production indicators could not be loaded. "
+        "Please try again in a few moments."
+    )
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+
+        try:
+
+            metrics = DentalCaseService.get_dashboard_metrics()
+
+        except DashboardMetricsError:
+
+            # The dashboard keeps rendering, but the cards are
+            # replaced by an explanatory message.
+            context.update(
+                {
+                    "metrics_error": self.METRICS_ERROR_MESSAGE,
+                    "pending": None,
+                    "in_progress": None,
+                    "completed": None,
+                    "total_active": None,
+                    "cases_by_stage": [],
+                }
+            )
+
+        else:
+
+            context.update(
+                {
+                    "metrics_error": None,
+                    "pending": metrics["pending"],
+                    "in_progress": metrics["in_progress"],
+                    "completed": metrics["completed"],
+                    "total_active": metrics["total_active"],
+                    "cases_by_stage": metrics["cases_by_stage"],
+                }
+            )
+
+        return context
+
+
+# --- FR-24: descarga de archivos adjuntos ---
+
+
+@login_required
+def download_case_file_view(request, file_id: int):
+    case_file = get_case_file_by_id(file_id=file_id)
+
+    if not case_file.file or not case_file.file.storage.exists(case_file.file.name):
+        raise Http404("El archivo solicitado no existe en el servidor.")
+
+    return FileResponse(
+        case_file.file.open("rb"),
+        as_attachment=True,
+        filename=case_file.filename,
+    )

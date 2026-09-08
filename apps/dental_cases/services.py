@@ -1,8 +1,13 @@
+import logging
+
 from django.db import transaction
 from django.utils import timezone
 
+from .exceptions import DashboardMetricsError
 from .models import DentalCase, TechnicianAssignment
 from .selectors import DentalCaseSelector
+
+logger = logging.getLogger(__name__)
 
 
 class DentalCaseService:
@@ -34,6 +39,30 @@ class DentalCaseService:
         DentalCase.Status.REJECTED: set(),
     }
 
+    @staticmethod
+    def get_dashboard_metrics():
+        """
+        Returns the production indicators of the laboratory.
+
+        Any failure while calculating the indicators is logged and
+        translated into a DashboardMetricsError, so the view can
+        show a message instead of returning a broken page.
+        """
+
+        try:
+
+            return DentalCaseSelector.get_dashboard_metrics()
+
+        except Exception as error:
+
+            logger.exception(
+                "Failed to calculate the dashboard metrics."
+            )
+
+            raise DashboardMetricsError(
+                "The production indicators could not be loaded."
+            ) from error
+    
     @staticmethod
     def get_all():
         return DentalCaseSelector.get_all()

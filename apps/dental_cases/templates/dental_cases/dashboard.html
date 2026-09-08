@@ -1,0 +1,134 @@
+{% extends "dental_cases/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Dashboard de Producción</h2>
+    <p class="text-muted">Indicadores en tiempo real</p>
+
+    <!-- Aviso de fallo del polling (lo controla el script, fuera de las zonas que se reemplazan) -->
+    <div class="alert alert-warning d-none" id="dashboard-connection-error" role="alert">
+        No se pudieron actualizar los indicadores. Mostrando los últimos datos disponibles.
+    </div>
+
+    <!-- ESTE ID ES VITAL PARA EL POLLING -->
+    <div class="row mb-4" id="dashboard-metrics">
+        {% if metrics_error %}
+        <div class="col-12">
+            <div class="alert alert-danger mb-3" role="alert">
+                {{ metrics_error }}
+            </div>
+        </div>
+        {% else %}
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Casos Activos</h5>
+                    <h2 class="card-text">{{ total_active }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-dark bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pendientes</h5>
+                    <h2 class="card-text">{{ pending }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">En Proceso</h5>
+                    <h2 class="card-text">{{ in_progress }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Completados</h5>
+                    <h2 class="card-text">{{ completed }}</h2>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ESTE ID TAMBIÉN -->
+    <div class="row" id="dashboard-stages">
+        {% if not metrics_error %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Casos por Etapa del Workflow
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for stage in cases_by_stage %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ stage.status }}
+                        <span class="badge bg-primary rounded-pill">{{ stage.total }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">No hay casos registrados.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Script de Polling -->
+<script>
+    (function () {
+        const connectionError = document.getElementById('dashboard-connection-error');
+
+        function showConnectionError() {
+            if (connectionError) {
+                connectionError.classList.remove('d-none');
+            }
+        }
+
+        function hideConnectionError() {
+            if (connectionError) {
+                connectionError.classList.add('d-none');
+            }
+        }
+
+        function refreshDashboard() {
+            fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => {
+                    // fetch solo rechaza ante fallos de red: los 4xx/5xx hay que mirarlos a mano.
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newMetrics = doc.getElementById('dashboard-metrics');
+                    const newStages = doc.getElementById('dashboard-stages');
+
+                    // Si la respuesta no trae las zonas esperadas (por ejemplo,
+                    // una redirección al login), no se pisa lo que ya se ve.
+                    if (!newMetrics || !newStages) {
+                        throw new Error('Respuesta inesperada del servidor');
+                    }
+
+                    document.getElementById('dashboard-metrics').innerHTML = newMetrics.innerHTML;
+                    document.getElementById('dashboard-stages').innerHTML = newStages.innerHTML;
+
+                    hideConnectionError();
+                })
+                .catch(error => {
+                    console.error('Error actualizando el dashboard:', error);
+                    showConnectionError();
+                });
+        }
+
+        setInterval(refreshDashboard, 5000);
+    })();
+</script>
+{% endblock %}

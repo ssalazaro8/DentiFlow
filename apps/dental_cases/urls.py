@@ -1,9 +1,14 @@
 from django.urls import include, path
 
 from . import views
-
+from .views import DashboardView
 
 urlpatterns = [
+
+    path("dashboard/", 
+         DashboardView.as_view(), 
+         name="dashboard"
+    ),
 
     path(
         "",
@@ -46,5 +51,12 @@ urlpatterns = [
         include(
             "apps.documents.urls"
         ),
+    ),
+
+    # FR-24: descarga de archivos adjuntos
+    path(
+        "files/<int:file_id>/download/",
+        views.download_case_file_view,
+        name="download_file",
     ),
 ]
