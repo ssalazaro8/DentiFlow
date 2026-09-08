@@ -10,6 +10,7 @@ from apps.laboratories.models import Laboratory
 from apps.clinics.models import Clinic
 
 from .exceptions import DashboardMetricsError
+from .permissions import can_access_case, require_case_access
 
 from .forms import (
     DentalCaseCreateForm,
@@ -29,14 +30,9 @@ def _require_laboratory_access(request, dental_case):
 
 
 def _can_view_case(user, dental_case):
-    if not user.is_authenticated:
-        return False
-    if user.is_superuser or dental_case.created_by_id == user.id:
-        return True
-    return bool(
-        dental_case.laboratory
-        and dental_case.laboratory.authorized_users.filter(pk=user.pk).exists()
-    )
+    # La regla vive en permissions.py para que dental_cases y documents
+    # no puedan divergir en quien accede a que.
+    return can_access_case(user, dental_case)
 
 
 def dental_case_list(request):
@@ -403,6 +399,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 @login_required
 def download_case_file_view(request, file_id: int):
     case_file = get_case_file_by_id(file_id=file_id)
+
+    require_case_access(request.user, case_file.case)
 
     if not case_file.file or not case_file.file.storage.exists(case_file.file.name):
         raise Http404("El archivo solicitado no existe en el servidor.")
