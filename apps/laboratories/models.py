@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 # Create your models here.
 
@@ -24,6 +25,19 @@ class Laboratory(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Users allowed to receive and manage cases for this laboratory.
+    authorized_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="authorized_laboratories",
+    )
+    # Kept separately because a laboratory user is not necessarily a technician.
+    technicians = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="technician_laboratories",
+    )
 
     class Meta:
         ordering = ["name"]  # Ordena automáticamente por nombre
