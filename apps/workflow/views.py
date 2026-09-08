@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.dental_cases.models import DentalCase
+from apps.dental_cases.permissions import require_case_access
 from apps.dental_cases.services import DentalCaseService
 from apps.dental_cases.views import _can_view_case
 from .forms import WorkflowForm, WorkflowUpdateForm
@@ -118,3 +119,23 @@ def start_production(request, case_id):
         else:
             messages.success(request, "Production started." if created else "Production was already started.")
     return redirect("case_tracking", case_id=case_id)
+
+
+@login_required
+def workflow_history(request, id):
+    """
+    FR-22: shows the complete ordered history of a case's stage changes.
+    """
+
+    workflow = WorkflowService.get_by_id(id)
+
+    require_case_access(request.user, workflow.dental_case)
+
+    return render(
+        request,
+        "workflow/history.html",
+        {
+            "workflow": workflow,
+            "history": WorkflowService.get_status_history(workflow),
+        },
+    )
