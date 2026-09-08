@@ -30,6 +30,9 @@ urlpatterns = [
 
     # Operational reports
     path("reports/", include("apps.reports.urls")),
+
+    # Laboratory users
+    path("users/", include("apps.users.urls")),
 ]
 
 if settings.DEBUG:
