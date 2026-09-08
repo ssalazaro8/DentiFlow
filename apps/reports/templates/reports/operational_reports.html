@@ -1,0 +1,191 @@
+{% extends "dental_cases/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2>Reportes Operativos</h2>
+    <p class="text-muted">Rendimiento de producción y estado de los casos</p>
+
+    <div class="card mb-4">
+        <div class="card-header">Filtros</div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+
+                <div class="col-md-3">
+                    <label for="{{ form.date_from.id_for_label }}" class="form-label">{{ form.date_from.label }}</label>
+                    {{ form.date_from }}
+                </div>
+
+                <div class="col-md-3">
+                    <label for="{{ form.date_to.id_for_label }}" class="form-label">{{ form.date_to.label }}</label>
+                    {{ form.date_to }}
+                    {% for error in form.date_to.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                    {{ form.status }}
+                </div>
+
+                <div class="col-md-3">
+                    <label for="{{ form.stage.id_for_label }}" class="form-label">{{ form.stage.label }}</label>
+                    {{ form.stage }}
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Generar reporte</button>
+                    <a href="{% url 'operational_reports' %}" class="btn btn-outline-secondary">Limpiar</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    {% if report_error %}
+
+    <div class="alert alert-danger" role="alert">
+        {{ report_error }}
+    </div>
+
+    {% else %}
+
+    <!-- Reporte de rendimiento de producción -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Rendimiento de Producción</span>
+            {% if production.has_data %}
+            <a class="btn btn-sm btn-outline-primary"
+               href="{% url 'download_report' 'production' %}?{{ request.GET.urlencode }}">
+                Descargar CSV
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            {% if production.has_data %}
+
+            <div class="row text-center mb-3">
+                <div class="col">
+                    <div class="text-muted small">Total de casos</div>
+                    <h3>{{ production.metrics.total }}</h3>
+                </div>
+                <div class="col">
+                    <div class="text-muted small">Completados</div>
+                    <h3>{{ production.metrics.completed }}</h3>
+                </div>
+                <div class="col">
+                    <div class="text-muted small">Tasa de finalización</div>
+                    <h3>{{ production.metrics.completion_rate }}%</h3>
+                </div>
+                <div class="col">
+                    <div class="text-muted small">Vencidos</div>
+                    <h3>{{ production.metrics.overdue }}</h3>
+                </div>
+                <div class="col">
+                    <div class="text-muted small">Tiempo promedio</div>
+                    <h3>
+                        {% if production.metrics.average_turnaround_days is not None %}
+                        {{ production.metrics.average_turnaround_days }} d
+                        {% else %}
+                        &mdash;
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+
+            <table class="table table-sm">
+                <thead>
+                    <tr><th>Tipo de servicio</th><th class="text-end">Casos</th></tr>
+                </thead>
+                <tbody>
+                    {% for row in production.metrics.by_service %}
+                    <tr>
+                        <td>{{ row.label }}</td>
+                        <td class="text-end">{{ row.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% else %}
+
+            <p class="text-muted mb-0">
+                No hay datos disponibles para generar este reporte con los filtros seleccionados.
+            </p>
+
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Reporte de estado de los casos -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Estado de los Casos</span>
+            {% if status_report.has_data %}
+            <a class="btn btn-sm btn-outline-primary"
+               href="{% url 'download_report' 'status' %}?{{ request.GET.urlencode }}">
+                Descargar CSV
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            {% if status_report.has_data %}
+
+            <h6 class="text-muted">Distribución por estado</h6>
+            <table class="table table-sm mb-4">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th class="text-end">Casos</th>
+                        <th class="text-end">Porcentaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in status_report.by_status %}
+                    <tr>
+                        <td>{{ row.label }}</td>
+                        <td class="text-end">{{ row.total }}</td>
+                        <td class="text-end">{{ row.percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h6 class="text-muted">Distribución por etapa del workflow</h6>
+            {% if status_report.by_stage %}
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr><th>Etapa</th><th class="text-end">Casos</th></tr>
+                </thead>
+                <tbody>
+                    {% for row in status_report.by_stage %}
+                    <tr>
+                        <td>{{ row.label }}</td>
+                        <td class="text-end">{{ row.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted mb-0">
+                Los casos seleccionados todavía no tienen workflow registrado.
+            </p>
+            {% endif %}
+
+            {% else %}
+
+            <p class="text-muted mb-0">
+                No hay datos disponibles para generar este reporte con los filtros seleccionados.
+            </p>
+
+            {% endif %}
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}
