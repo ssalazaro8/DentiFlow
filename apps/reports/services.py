@@ -96,6 +96,7 @@ class ReportService:
         writer.writerow(["In progress", metrics["in_progress"]])
         writer.writerow(["Pending", metrics["pending"]])
         writer.writerow(["Cancelled", metrics["cancelled"]])
+        writer.writerow(["Rejected", metrics["rejected"]])
         writer.writerow(["Overdue", metrics["overdue"]])
         writer.writerow(["Completion rate (%)", metrics["completion_rate"]])
         writer.writerow(

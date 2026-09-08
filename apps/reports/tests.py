@@ -8,7 +8,23 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.dental_cases.models import DentalCase
+from apps.laboratories.models import Laboratory
 from apps.workflow.models import Workflow
+
+
+def build_laboratory(name, email):
+    """
+    Creates a laboratory for the scope tests.
+    """
+
+    return Laboratory.objects.create(
+        name=name,
+        email=email,
+        phone="1",
+        city="Medellin",
+        address="Calle 1",
+        service="CROWN",
+    )
 
 from .exceptions import ReportGenerationError
 from .forms import ReportFilterForm
@@ -169,8 +185,8 @@ class ReportFilterTests(TestCase):
             created_at=hoy - timedelta(days=1),
         )
 
-        Workflow.objects.create(case_number="F-002", current_stage="QC")
-        Workflow.objects.create(case_number="F-003", current_stage="DESIGN")
+        Workflow.objects.create(dental_case=self.reciente, current_stage="QC")
+        Workflow.objects.create(dental_case=self.otro, current_stage="DESIGN")
 
     def test_filter_by_period(self):
         """
@@ -237,14 +253,14 @@ class ReportFilterTests(TestCase):
 class CaseStatusReportTests(TestCase):
 
     def setUp(self):
-        build_case("S-001", DentalCase.Status.IN_PROGRESS)
-        build_case("S-002", DentalCase.Status.IN_PROGRESS)
-        build_case("S-003", DentalCase.Status.COMPLETED)
+        uno = build_case("S-001", DentalCase.Status.IN_PROGRESS)
+        dos = build_case("S-002", DentalCase.Status.IN_PROGRESS)
+        tres = build_case("S-003", DentalCase.Status.COMPLETED)
         build_case("S-004", DentalCase.Status.SUBMITTED)
 
-        Workflow.objects.create(case_number="S-001", current_stage="PRINTING")
-        Workflow.objects.create(case_number="S-002", current_stage="PRINTING")
-        Workflow.objects.create(case_number="S-003", current_stage="SHIPPED")
+        Workflow.objects.create(dental_case=uno, current_stage="PRINTING")
+        Workflow.objects.create(dental_case=dos, current_stage="PRINTING")
+        Workflow.objects.create(dental_case=tres, current_stage="SHIPPED")
 
     def test_status_distribution_matches_stored_data(self):
         """
@@ -313,12 +329,19 @@ class ReportViewTests(TestCase):
     def setUp(self):
         self.url = reverse("operational_reports")
 
+        self.laboratory = build_laboratory("Lab Propio", "propio@test.com")
+
         self.user = User.objects.create_user(
             username="santiago_test",
             password="clave-de-prueba",
         )
+        self.laboratory.authorized_users.add(self.user)
 
-        build_case("V-001", DentalCase.Status.IN_PROGRESS)
+        build_case(
+            "V-001",
+            DentalCase.Status.IN_PROGRESS,
+            laboratory=self.laboratory,
+        )
 
     def test_reports_require_login(self):
         """
@@ -414,3 +437,101 @@ class ReportViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+
+class LaboratoryScopeTests(TestCase):
+    """
+    Los reportes solo pueden mostrar datos del laboratorio del usuario.
+    """
+
+    def setUp(self):
+        self.url = reverse("operational_reports")
+
+        self.propio = build_laboratory("Lab Propio", "propio@test.com")
+        self.ajeno = build_laboratory("Lab Ajeno", "ajeno@test.com")
+
+        self.user = User.objects.create_user(
+            username="tecnico", password="clave"
+        )
+        self.propio.authorized_users.add(self.user)
+
+        build_case(
+            "L-001", DentalCase.Status.IN_PROGRESS, laboratory=self.propio
+        )
+        build_case(
+            "L-002", DentalCase.Status.COMPLETED, laboratory=self.propio
+        )
+
+        # Tres casos que el usuario no debe ver nunca.
+        build_case(
+            "L-003", DentalCase.Status.IN_PROGRESS, laboratory=self.ajeno
+        )
+        build_case(
+            "L-004", DentalCase.Status.COMPLETED, laboratory=self.ajeno
+        )
+        build_case("L-005", DentalCase.Status.SUBMITTED)
+
+    def test_report_only_contains_own_laboratory(self):
+        """
+        El reporte cuenta solo los casos del laboratorio del usuario.
+        """
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.url)
+
+        metricas = response.context["production"]["metrics"]
+
+        self.assertEqual(metricas["total"], 2)
+        self.assertEqual(metricas["completed"], 1)
+
+    def test_user_without_laboratory_sees_nothing(self):
+        """
+        Sin laboratorio asignado el reporte va vacio, no completo.
+        """
+
+        huerfano = User.objects.create_user(
+            username="sin_lab", password="clave"
+        )
+
+        self.client.force_login(huerfano)
+
+        response = self.client.get(self.url)
+
+        self.assertFalse(response.context["production"]["has_data"])
+        self.assertEqual(
+            response.context["production"]["metrics"]["total"], 0
+        )
+
+    def test_superuser_sees_every_laboratory(self):
+        """
+        El superusuario no tiene restriccion de alcance.
+        """
+
+        admin = User.objects.create_superuser(
+            username="admin", password="clave", email="admin@test.com"
+        )
+
+        self.client.force_login(admin)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(
+            response.context["production"]["metrics"]["total"], 5
+        )
+
+    def test_download_is_scoped_too(self):
+        """
+        La descarga respeta el mismo alcance que la pantalla.
+        """
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("download_report", args=["production"])
+        )
+
+        contenido = response.content.decode()
+
+        self.assertEqual(response["Content-Type"], "text/csv")
+        self.assertIn("Total cases,2", contenido)

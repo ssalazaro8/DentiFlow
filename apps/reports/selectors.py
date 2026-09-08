@@ -24,8 +24,12 @@ class ReportSelector:
         DentalCase.Status.IN_REVIEW,
     ]
 
-    # A case that is finished or cancelled can no longer be overdue.
-    CLOSED_STATUSES = COMPLETED_STATUSES + [DentalCase.Status.CANCELLED]
+    # A case that is finished, cancelled or rejected by the laboratory
+    # can no longer be overdue.
+    CLOSED_STATUSES = COMPLETED_STATUSES + [
+        DentalCase.Status.CANCELLED,
+        DentalCase.Status.REJECTED,
+    ]
 
     @staticmethod
     def get_filtered_cases(
@@ -33,10 +37,14 @@ class ReportSelector:
         date_to=None,
         status=None,
         stage=None,
-        laboratory=None,
+        laboratories=None,
     ):
         """
         Returns the dental cases matching the report filters.
+
+        `laboratories` is the scope the requesting user is allowed to
+        see. None means no restriction and is reserved for superusers:
+        callers that serve a regular user must always pass it.
         """
 
         cases = DentalCase.objects.all()
@@ -51,22 +59,10 @@ class ReportSelector:
             cases = cases.filter(status=status)
 
         if stage:
-            # Workflow references the case by its number instead of a
-            # foreign key, so the stage filter has to go through the
-            # case numbers currently sitting in that stage.
-            case_numbers = Workflow.objects.filter(
-                current_stage=stage
-            ).values_list("case_number", flat=True)
+            cases = cases.filter(workflow__current_stage=stage)
 
-            cases = cases.filter(case_number__in=case_numbers)
-
-        if laboratory:
-            # Placeholder for the laboratory scope. DentalCase has no
-            # laboratory relation yet (it arrives with PR #31), so the
-            # filter is accepted and ignored on purpose instead of
-            # silently returning every laboratory's cases as if it had
-            # been applied.
-            pass
+        if laboratories is not None:
+            cases = cases.filter(laboratory__in=laboratories)
 
         return cases
 
@@ -92,6 +88,10 @@ class ReportSelector:
 
         cancelled = cases.filter(
             status=DentalCase.Status.CANCELLED
+        ).count()
+
+        rejected = cases.filter(
+            status=DentalCase.Status.REJECTED
         ).count()
 
         overdue = cases.filter(
@@ -133,6 +133,7 @@ class ReportSelector:
             "in_progress": in_progress,
             "pending": pending,
             "cancelled": cancelled,
+            "rejected": rejected,
             "overdue": overdue,
             "completion_rate": (
                 round(completed * 100 / total, 1) if total else 0
@@ -171,17 +172,17 @@ class ReportSelector:
         Returns how the cases are distributed across workflow stages.
         """
 
-        case_numbers = list(cases.values_list("case_number", flat=True))
-
-        if not case_numbers:
-            return []
-
         rows = list(
-            Workflow.objects.filter(case_number__in=case_numbers)
-            .values("current_stage")
+            cases.filter(workflow__isnull=False)
+            .values("workflow__current_stage")
             .annotate(total=Count("id"))
             .order_by("-total")
         )
+
+        # Se renombra la clave del JOIN para que la plantilla y el CSV
+        # no dependan de como se llega al workflow.
+        for row in rows:
+            row["current_stage"] = row.pop("workflow__current_stage")
 
         stage_labels = dict(Workflow.STAGE_CHOICES)
 
