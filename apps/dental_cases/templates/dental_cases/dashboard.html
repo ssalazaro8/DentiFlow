@@ -5,8 +5,20 @@
     <h2>Dashboard de Producción</h2>
     <p class="text-muted">Indicadores en tiempo real</p>
 
+    <!-- Aviso de fallo del polling (lo controla el script, fuera de las zonas que se reemplazan) -->
+    <div class="alert alert-warning d-none" id="dashboard-connection-error" role="alert">
+        No se pudieron actualizar los indicadores. Mostrando los últimos datos disponibles.
+    </div>
+
     <!-- ESTE ID ES VITAL PARA EL POLLING -->
     <div class="row mb-4" id="dashboard-metrics">
+        {% if metrics_error %}
+        <div class="col-12">
+            <div class="alert alert-danger mb-3" role="alert">
+                {{ metrics_error }}
+            </div>
+        </div>
+        {% else %}
         <div class="col-md-3">
             <div class="card text-white bg-primary mb-3">
                 <div class="card-body">
@@ -39,10 +51,12 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <!-- ESTE ID TAMBIÉN -->
     <div class="row" id="dashboard-stages">
+        {% if not metrics_error %}
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -60,29 +74,61 @@
                 </ul>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 
 <!-- Script de Polling -->
 <script>
-    setInterval(() => {
-        fetch(window.location.href)
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                const newMetrics = doc.getElementById('dashboard-metrics');
-                const newStages = doc.getElementById('dashboard-stages');
-                
-                if (newMetrics && document.getElementById('dashboard-metrics')) {
+    (function () {
+        const connectionError = document.getElementById('dashboard-connection-error');
+
+        function showConnectionError() {
+            if (connectionError) {
+                connectionError.classList.remove('d-none');
+            }
+        }
+
+        function hideConnectionError() {
+            if (connectionError) {
+                connectionError.classList.add('d-none');
+            }
+        }
+
+        function refreshDashboard() {
+            fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => {
+                    // fetch solo rechaza ante fallos de red: los 4xx/5xx hay que mirarlos a mano.
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newMetrics = doc.getElementById('dashboard-metrics');
+                    const newStages = doc.getElementById('dashboard-stages');
+
+                    // Si la respuesta no trae las zonas esperadas (por ejemplo,
+                    // una redirección al login), no se pisa lo que ya se ve.
+                    if (!newMetrics || !newStages) {
+                        throw new Error('Respuesta inesperada del servidor');
+                    }
+
                     document.getElementById('dashboard-metrics').innerHTML = newMetrics.innerHTML;
-                }
-                if (newStages && document.getElementById('dashboard-stages')) {
                     document.getElementById('dashboard-stages').innerHTML = newStages.innerHTML;
-                }
-            })
-            .catch(error => console.error('Error actualizando:', error));
-    }, 5000);
+
+                    hideConnectionError();
+                })
+                .catch(error => {
+                    console.error('Error actualizando el dashboard:', error);
+                    showConnectionError();
+                });
+        }
+
+        setInterval(refreshDashboard, 5000);
+    })();
 </script>
 {% endblock %}

@@ -2,13 +2,14 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
+
+from .exceptions import DashboardMetricsError
 from .services import DentalCaseService
 
 from .forms import (
     DentalCaseCreateForm,
     DentalCaseUpdateForm,
 )
-from .services import DentalCaseService
 
 
 def dental_case_list(request):
@@ -228,18 +229,51 @@ def dental_case_delete(request, case_id):
     )
 
 class DashboardView(LoginRequiredMixin, TemplateView):
+    """
+    Displays the real time production indicators of the laboratory.
+    """
+
     template_name = "dental_cases/dashboard.html"
 
+    METRICS_ERROR_MESSAGE = (
+        "The production indicators could not be loaded. "
+        "Please try again in a few moments."
+    )
+
     def get_context_data(self, **kwargs):
+
         context = super().get_context_data(**kwargs)
 
-        metrics = DentalCaseService.get_dashboard_metrics()
-        context.update({
-            "pending": metrics["pending"],
-            "in_progress": metrics["in_progress"],
-            "completed": metrics["completed"],
-            "total_active": metrics["total_active"],
-            "cases_by_stage": metrics["cases_by_stage"],
-        })
+        try:
+
+            metrics = DentalCaseService.get_dashboard_metrics()
+
+        except DashboardMetricsError:
+
+            # The dashboard keeps rendering, but the cards are
+            # replaced by an explanatory message.
+            context.update(
+                {
+                    "metrics_error": self.METRICS_ERROR_MESSAGE,
+                    "pending": None,
+                    "in_progress": None,
+                    "completed": None,
+                    "total_active": None,
+                    "cases_by_stage": [],
+                }
+            )
+
+        else:
+
+            context.update(
+                {
+                    "metrics_error": None,
+                    "pending": metrics["pending"],
+                    "in_progress": metrics["in_progress"],
+                    "completed": metrics["completed"],
+                    "total_active": metrics["total_active"],
+                    "cases_by_stage": metrics["cases_by_stage"],
+                }
+            )
 
         return context
