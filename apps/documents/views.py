@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, Http404
 from django.shortcuts import (
     get_object_or_404,
@@ -7,6 +8,7 @@ from django.shortcuts import (
 )
 
 from apps.dental_cases.models import DentalCase
+from apps.dental_cases.permissions import require_case_access
 
 from .forms import CaseFileUploadForm
 from .models import CaseFile
@@ -14,6 +16,7 @@ from .selectors import CaseFileSelector
 from .services import CaseFileService
 
 
+@login_required
 def case_file_list(
     request,
     case_id,
@@ -27,6 +30,8 @@ def case_file_list(
         DentalCase,
         id=case_id,
     )
+
+    require_case_access(request.user, dental_case)
 
     files = (
         CaseFileSelector.get_by_case(
@@ -44,6 +49,7 @@ def case_file_list(
     )
 
 
+@login_required
 def case_file_upload(
     request,
     case_id,
@@ -57,6 +63,8 @@ def case_file_upload(
         DentalCase,
         id=case_id,
     )
+
+    require_case_access(request.user, dental_case)
 
     if request.method == "POST":
 
@@ -112,6 +120,7 @@ def case_file_upload(
     )
 
 
+@login_required
 def case_file_delete(
     request,
     case_id,
@@ -126,6 +135,8 @@ def case_file_delete(
         DentalCase,
         id=case_id,
     )
+
+    require_case_access(request.user, dental_case)
 
     case_file = get_object_or_404(
         CaseFile,
@@ -166,6 +177,7 @@ def case_file_delete(
     )
 
 
+@login_required
 def case_file_download(
     request,
     case_id,
@@ -179,6 +191,8 @@ def case_file_download(
         DentalCase,
         id=case_id,
     )
+
+    require_case_access(request.user, dental_case)
 
     case_file = get_object_or_404(
         CaseFile,

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2>Acceso denegado</h2>
+
+    <p>
+        {% if exception %}
+            {{ exception }}
+        {% else %}
+            No tienes permiso para acceder a este recurso.
+        {% endif %}
+    </p>
+
+    <a href="/cases/">Volver a los casos</a>
+
+</div>
+{% endblock %}
