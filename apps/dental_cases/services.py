@@ -32,8 +32,8 @@ class DentalCaseService:
     }
 
     @staticmethod
-    def get_dashboard_metrics(user_identifier):
-        return DentalCaseSelector.get_dashboard_metrics(user_identifier)
+    def get_dashboard_metrics():
+        return DentalCaseSelector.get_dashboard_metrics()
     
     @staticmethod
     def get_all():

@@ -48,9 +48,9 @@ class DentalCaseSelector:
         )
 
     @staticmethod
-    def get_dashboard_metrics(user_identifier):
+    def get_dashboard_metrics():
 
-        base_qs = DentalCase.objects.filter(requested_by=user_identifier)
+        base_qs = DentalCase.objects.all()
         
         pending_cases = base_qs.filter(
             status__in=[DentalCase.Status.SUBMITTED, DentalCase.Status.IN_REVIEW]

@@ -232,11 +232,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        user_identifier = self.request.user.username 
-        
 
-        metrics = DentalCaseService.get_dashboard_metrics(user_identifier)
+        metrics = DentalCaseService.get_dashboard_metrics()
         context.update({
             "pending": metrics["pending"],
             "in_progress": metrics["in_progress"],
@@ -244,5 +241,5 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             "total_active": metrics["total_active"],
             "cases_by_stage": metrics["cases_by_stage"],
         })
-        
+
         return context
