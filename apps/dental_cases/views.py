@@ -2,13 +2,17 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+
+from .exceptions import DashboardMetricsError
+from .services import DentalCaseService
 
 from .forms import (
     DentalCaseCreateForm,
     DentalCaseUpdateForm,
 )
 from .selectors import get_case_file_by_id
-from .services import DentalCaseService
 
 
 def dental_case_list(request):
@@ -226,6 +230,56 @@ def dental_case_delete(request, case_id):
             "dental_case": dental_case,
         },
     )
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    """
+    Displays the real time production indicators of the laboratory.
+    """
+
+    template_name = "dental_cases/dashboard.html"
+
+    METRICS_ERROR_MESSAGE = (
+        "The production indicators could not be loaded. "
+        "Please try again in a few moments."
+    )
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+
+        try:
+
+            metrics = DentalCaseService.get_dashboard_metrics()
+
+        except DashboardMetricsError:
+
+            # The dashboard keeps rendering, but the cards are
+            # replaced by an explanatory message.
+            context.update(
+                {
+                    "metrics_error": self.METRICS_ERROR_MESSAGE,
+                    "pending": None,
+                    "in_progress": None,
+                    "completed": None,
+                    "total_active": None,
+                    "cases_by_stage": [],
+                }
+            )
+
+        else:
+
+            context.update(
+                {
+                    "metrics_error": None,
+                    "pending": metrics["pending"],
+                    "in_progress": metrics["in_progress"],
+                    "completed": metrics["completed"],
+                    "total_active": metrics["total_active"],
+                    "cases_by_stage": metrics["cases_by_stage"],
+                }
+            )
+
+        return context
 
 
 # --- FR-24: descarga de archivos adjuntos ---
