@@ -53,6 +53,14 @@ class WorkflowUpdate(models.Model):
         on_delete=models.CASCADE,
         related_name="updates",
     )
+    # Etapa desde la que se movio el caso. Queda vacia en el primer
+    # registro, cuando el workflow recien se crea y no hay anterior.
+    previous_stage = models.CharField(
+        max_length=20,
+        choices=Workflow.STAGE_CHOICES,
+        blank=True,
+        verbose_name="Previous stage",
+    )
     stage = models.CharField(max_length=20, choices=Workflow.STAGE_CHOICES)
     progress_percentage = models.PositiveSmallIntegerField()
     comment = models.TextField(blank=True)
@@ -67,3 +75,9 @@ class WorkflowUpdate(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        verbose_name = "Workflow Update"
+        verbose_name_plural = "Workflow Updates"
+
+    def __str__(self):
+        origen = self.get_previous_stage_display() or "Start"
+        return f"{origen} -> {self.get_stage_display()}"

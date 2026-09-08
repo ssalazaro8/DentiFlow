@@ -21,6 +21,7 @@ urlpatterns = [
         views.workflow_update_stage,
         name="workflow_update_stage"
     ),
+    path("<int:id>/history/", views.workflow_history, name="workflow_history"),
     path("case/<int:case_id>/", views.case_tracking, name="case_tracking"),
     path("case/<int:case_id>/start/", views.start_production, name="start_production"),
 ]

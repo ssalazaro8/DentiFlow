@@ -31,6 +31,7 @@ class WorkflowService:
         workflow = Workflow.objects.create(**data)
         WorkflowUpdate.objects.create(
             workflow=workflow,
+            previous_stage="",
             stage=workflow.current_stage,
             progress_percentage=workflow.progress_percentage,
             comment=workflow.comments,
@@ -44,12 +45,17 @@ class WorkflowService:
             raise ValueError("Workflow not found.")
         if workflow.dental_case.acceptance_status != DentalCase.AcceptanceStatus.ACCEPTED:
             raise ValueError("Rejected cases cannot proceed through production.")
+
+        # Se lee antes de pisarlo: es el "de donde venia" del historial.
+        previous_stage = workflow.current_stage
+
         workflow.current_stage = stage
         workflow.progress_percentage = progress_percentage
         workflow.comments = comment
         workflow.save()
         WorkflowUpdate.objects.create(
             workflow=workflow,
+            previous_stage=previous_stage,
             stage=stage,
             progress_percentage=progress_percentage,
             comment=comment,
@@ -57,3 +63,11 @@ class WorkflowService:
         )
 
         return workflow
+
+    @staticmethod
+    def get_status_history(workflow):
+        """
+        Returns the full ordered history of a workflow.
+        """
+
+        return workflow.updates.select_related("updated_by").all()
