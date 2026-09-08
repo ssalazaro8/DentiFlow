@@ -8,11 +8,11 @@
     <div>
 
         <h1 class="mb-1">
-            Dental Cases
+            {% if laboratory %}{{ laboratory.name }} case inbox{% elif clinic %}{{ clinic.name }} case inbox{% else %}Dental Cases{% endif %}
         </h1>
 
         <p class="text-muted mb-0">
-            Manage dental work orders throughout their lifecycle.
+            {% if laboratory %}Review cases that have been sent to your laboratory.{% elif clinic %}Cases requested by this clinic.{% else %}Manage dental work orders throughout their lifecycle.{% endif %}
         </p>
 
     </div>
@@ -123,6 +123,14 @@
                                 </span>
 
                             {% elif case.status == "CANCELLED" %}
+
+                                <span class="badge bg-danger">
+                                    {{ case.get_status_display }}
+                                </span>
+
+                            {% endif %}
+
+                            {% if case.status == "REJECTED" %}
 
                                 <span class="badge bg-danger">
                                     {{ case.get_status_display }}

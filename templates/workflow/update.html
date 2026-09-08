@@ -1,110 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Update Workflow</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f5f5f5;
-        }
-
-        .workflow-card {
-            background-color: white;
-            max-width: 500px;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div class="workflow-card">
-
-        <h1>Update Workflow</h1>
-
-        <h2>
-            Case: {{ workflow.case_number }}
-        </h2>
-
-        <p>
-            Current status:
-            <strong>
-                {{ workflow.get_current_stage_display }}
-            </strong>
-        </p>
-
-        <form method="post">
-
-            {% csrf_token %}
-
-            <label for="stage">
-                New status:
-            </label>
-
-            <select name="stage" id="stage">
-
-                {% for value, label in workflow.STAGE_CHOICES %}
-
-                    <option
-                        value="{{ value }}"
-                        {% if workflow.current_stage == value %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ label }}
-                    </option>
-
-                {% endfor %}
-
-            </select>
-
-            <button type="submit">
-                Update Status
-            </button>
-
-        </form>
-
-        <a
-            class="back-link"
-            href="{% url 'workflow_list' %}"
-        >
-            Back to Workflow List
-        </a>
-
-    </div>
-
-</body>
-</html>
+{% extends "dental_cases/base.html" %}
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 680px;"><div class="card-body p-4">
+  <h1 class="h3">Update case tracking</h1><p class="text-muted">{{ workflow.dental_case.case_number }} · the clinic sees this immediately.</p>
+  <form method="post">{% csrf_token %}
+    {% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+    <div class="mb-3">{{ form.current_stage.label_tag }}{{ form.current_stage }}</div>
+    <div class="mb-3">{{ form.progress_percentage.label_tag }}{{ form.progress_percentage }}</div>
+    <div class="mb-3">{{ form.comment.label_tag }}{{ form.comment }}</div>
+    <button class="btn btn-primary">Publish update</button><a class="btn btn-link" href="{% url 'case_tracking' workflow.dental_case.id %}">Cancel</a>
+  </form>
+</div></div>
+{% endblock %}

@@ -39,6 +39,42 @@
 
 </div>
 
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Laboratory decision & production</h5>
+        {% if dental_case.acceptance_status == "PENDING" %}
+            <span class="badge bg-warning text-dark">Pending decision</span>
+        {% elif dental_case.acceptance_status == "ACCEPTED" %}
+            <span class="badge bg-success">Accepted</span>
+        {% else %}
+            <span class="badge bg-danger">Rejected</span>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <p class="mb-2"><strong>Destination laboratory:</strong> {{ dental_case.laboratory|default:"Not assigned" }}</p>
+        {% if dental_case.acceptance_status == "REJECTED" %}
+            <p class="mb-2 text-danger"><strong>Reason:</strong> {{ dental_case.rejection_reason }}</p>
+        {% endif %}
+        {% if assignment %}
+            <p class="mb-3"><strong>Assigned technician:</strong> {{ assignment.technician.get_full_name|default:assignment.technician.username }}</p>
+        {% else %}
+            <p class="mb-3 text-muted">No technician assigned yet.</p>
+        {% endif %}
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'case_tracking' dental_case.id %}" class="btn btn-outline-primary">Track case</a>
+            {% if can_manage_laboratory and dental_case.acceptance_status == "PENDING" %}
+                <form method="post" action="{% url 'dental_case_accept' dental_case.id %}">{% csrf_token %}<button class="btn btn-success">Accept case</button></form>
+                <a href="{% url 'dental_case_reject' dental_case.id %}" class="btn btn-outline-danger">Reject case</a>
+            {% endif %}
+            {% if can_manage_laboratory and dental_case.acceptance_status == "ACCEPTED" %}
+                <a href="{% url 'technician_assignment' dental_case.id %}" class="btn btn-primary">{% if assignment %}Change technician{% else %}Assign technician{% endif %}</a>
+                {% if assignment %}<form method="post" action="{% url 'technician_assignment_remove' dental_case.id %}">{% csrf_token %}<button class="btn btn-outline-secondary">Remove technician</button></form>{% endif %}
+                {% if assignment and not workflow %}<form method="post" action="{% url 'start_production' dental_case.id %}">{% csrf_token %}<button class="btn btn-dark">Start production</button></form>{% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 
 <div class="card shadow-sm mb-4">
 

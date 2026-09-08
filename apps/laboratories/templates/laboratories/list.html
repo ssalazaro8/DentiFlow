@@ -32,6 +32,8 @@
                 <th>Email</th>
                 <th>Calificación</th>
                 <th>Estado</th>
+                <th>Casos</th>
+                <th>Técnicos</th>
             </tr>
         </thead>
         <tbody>
@@ -44,10 +46,20 @@
                 <td>{{ lab.email }}</td>
                 <td>⭐ {{ lab.rating }}</td>
                 <td><span class="badge">Activo</span></td>
+                <td>
+                    <a href="{% url 'laboratory_case_inbox' lab.id %}" class="btn" style="margin:0; background-color:#8e44ad;">
+                        Ver bandeja
+                    </a>
+                </td>
+                <td>
+                    <a href="{% url 'technician_create' lab.id %}" class="btn" style="margin:0; background-color:#16a085;">
+                        + Técnico
+                    </a>
+                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" style="text-align: center;">No hay laboratorios registrados actualmente.</td>
+                <td colspan="9" style="text-align: center;">No hay laboratorios registrados actualmente.</td>
             </tr>
             {% endfor %}
         </tbody>

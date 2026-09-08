@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm mx-auto" style="max-width: 700px;">
+
+        <div class="card-body p-4">
+
+            <h1 class="h3 mb-2">
+                Create technician
+            </h1>
+
+            <p class="text-muted">
+                Laboratory:
+                <strong>{{ laboratory.name }}</strong>
+            </p>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    {{ form.username.label_tag }}
+                    {{ form.username }}
+
+                    {% for error in form.username.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.first_name.label_tag }}
+                    {{ form.first_name }}
+
+                    {% for error in form.first_name.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.last_name.label_tag }}
+                    {{ form.last_name }}
+
+                    {% for error in form.last_name.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.email.label_tag }}
+                    {{ form.email }}
+
+                    {% for error in form.email.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.password.label_tag }}
+                    {{ form.password }}
+
+                    {% for error in form.password.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.password_confirm.label_tag }}
+                    {{ form.password_confirm }}
+
+                    {% for error in form.password_confirm.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-4">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Create technician
+                    </button>
+
+                    <a
+                        href="{% url 'laboratory_list' %}"
+                        class="btn btn-link"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
