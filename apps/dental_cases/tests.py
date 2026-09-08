@@ -94,7 +94,7 @@ class DashboardViewTests(TestCase):
 
     def setUp(self):
 
-        self.url = reverse("dental_cases:dashboard")
+        self.url = reverse("dashboard")
 
         self.user = User.objects.create_user(
             username="santiago_test",

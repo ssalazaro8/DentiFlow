@@ -3,8 +3,6 @@ from django.urls import include, path
 from . import views
 from .views import DashboardView
 
-app_name = "dental_cases"
-
 urlpatterns = [
 
     path("dashboard/", 
