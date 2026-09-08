@@ -5,11 +5,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.dental_cases.models import DentalCase
 from apps.dental_cases.permissions import require_case_access
+from apps.laboratories.models import Laboratory
+from apps.laboratories.permissions import require_laboratory_access
 from apps.dental_cases.services import DentalCaseService
 from apps.dental_cases.views import _can_view_case
-from .forms import WorkflowForm, WorkflowUpdateForm
+from .forms import WorkflowForm, WorkflowStageForm, WorkflowUpdateForm
 from .models import Workflow, WorkflowUpdate
-from .services import WorkflowService
+from .selectors import WorkflowStageSelector
+from .services import WorkflowService, WorkflowStageService
 
 
 def workflow_list(request):
@@ -139,3 +142,149 @@ def workflow_history(request, id):
             "history": WorkflowService.get_status_history(workflow),
         },
     )
+
+
+# --- FR-23: configuracion de etapas por laboratorio ---
+
+
+def _get_laboratory_for(request, laboratory_id):
+    """
+    Returns the laboratory only if the user may manage it.
+    """
+
+    laboratory = get_object_or_404(Laboratory, id=laboratory_id)
+
+    require_laboratory_access(request.user, laboratory)
+
+    return laboratory
+
+
+@login_required
+def workflow_stage_list(request, laboratory_id):
+    """
+    Shows the stages of a laboratory in its configured order.
+    """
+
+    laboratory = _get_laboratory_for(request, laboratory_id)
+
+    return render(
+        request,
+        "workflow/stages.html",
+        {
+            "laboratory": laboratory,
+            "stages": WorkflowStageService.get_stages(laboratory),
+            "form": WorkflowStageForm(),
+        },
+    )
+
+
+@login_required
+def workflow_stage_create(request, laboratory_id):
+    """
+    Adds a stage at the end of the laboratory's sequence.
+    """
+
+    laboratory = _get_laboratory_for(request, laboratory_id)
+
+    if request.method == "POST":
+        form = WorkflowStageForm(request.POST)
+
+        if form.is_valid():
+            try:
+                WorkflowStageService.create(
+                    laboratory,
+                    form.cleaned_data["name"],
+                    is_active=form.cleaned_data["is_active"],
+                )
+            except ValueError as error:
+                messages.error(request, str(error))
+            else:
+                messages.success(request, "Stage created successfully.")
+        else:
+            messages.error(request, "Please correct the errors in the form.")
+
+    return redirect("workflow_stage_list", laboratory_id=laboratory.id)
+
+
+@login_required
+def workflow_stage_edit(request, laboratory_id, stage_id):
+    """
+    Renames a stage or changes whether it is active.
+    """
+
+    laboratory = _get_laboratory_for(request, laboratory_id)
+
+    stage = WorkflowStageSelector.get_by_id(laboratory, stage_id)
+
+    if stage is None:
+        messages.error(request, "Stage not found in this laboratory.")
+        return redirect("workflow_stage_list", laboratory_id=laboratory.id)
+
+    if request.method == "POST":
+        form = WorkflowStageForm(request.POST)
+
+        if form.is_valid():
+            try:
+                WorkflowStageService.update(
+                    stage,
+                    name=form.cleaned_data["name"],
+                    is_active=form.cleaned_data["is_active"],
+                )
+            except ValueError as error:
+                messages.error(request, str(error))
+            else:
+                messages.success(request, "Stage updated successfully.")
+                return redirect(
+                    "workflow_stage_list", laboratory_id=laboratory.id
+                )
+    else:
+        form = WorkflowStageForm(
+            initial={"name": stage.name, "is_active": stage.is_active}
+        )
+
+    return render(
+        request,
+        "workflow/stage_edit.html",
+        {"laboratory": laboratory, "stage": stage, "form": form},
+    )
+
+
+@login_required
+def workflow_stage_toggle(request, laboratory_id, stage_id):
+    """
+    Activates or deactivates a stage.
+    """
+
+    laboratory = _get_laboratory_for(request, laboratory_id)
+
+    stage = WorkflowStageSelector.get_by_id(laboratory, stage_id)
+
+    if stage is None:
+        messages.error(request, "Stage not found in this laboratory.")
+    elif request.method == "POST":
+        WorkflowStageService.toggle_active(stage)
+        estado = "activated" if stage.is_active else "deactivated"
+        messages.success(request, f"Stage {estado} successfully.")
+
+    return redirect("workflow_stage_list", laboratory_id=laboratory.id)
+
+
+@login_required
+def workflow_stage_move(request, laboratory_id, stage_id, direction):
+    """
+    Moves a stage one position up or down in the sequence.
+    """
+
+    laboratory = _get_laboratory_for(request, laboratory_id)
+
+    stage = WorkflowStageSelector.get_by_id(laboratory, stage_id)
+
+    if stage is None:
+        messages.error(request, "Stage not found in this laboratory.")
+    elif request.method == "POST":
+        try:
+            WorkflowStageService.move(stage, direction)
+        except ValueError as error:
+            messages.error(request, str(error))
+
+    return redirect("workflow_stage_list", laboratory_id=laboratory.id)

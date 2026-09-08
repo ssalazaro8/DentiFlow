@@ -1,9 +1,9 @@
 from django.db import transaction
 
 from apps.dental_cases.models import DentalCase
-from .models import Workflow, WorkflowUpdate
+from .models import Workflow, WorkflowStage, WorkflowUpdate
 
-from .selectors import WorkflowSelector
+from .selectors import WorkflowSelector, WorkflowStageSelector
 
 
 class WorkflowService:
@@ -71,3 +71,135 @@ class WorkflowService:
         """
 
         return workflow.updates.select_related("updated_by").all()
+
+
+class WorkflowStageService:
+    """
+    FR-23: alta, edicion, activacion y reordenamiento de etapas.
+
+    Cada metodo recibe el laboratorio y trabaja siempre dentro de el,
+    de modo que una operacion no pueda tocar la configuracion de otro.
+    """
+
+    @staticmethod
+    def get_stages(laboratory, only_active=False):
+        return WorkflowStageSelector.get_for_laboratory(
+            laboratory, only_active=only_active
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def create(laboratory, name, is_active=True):
+        """
+        Creates a stage at the end of the laboratory's sequence.
+        """
+
+        name = name.strip()
+
+        if not name:
+            raise ValueError("The stage name cannot be empty.")
+
+        if WorkflowStage.objects.filter(
+            laboratory=laboratory, name__iexact=name
+        ).exists():
+            raise ValueError(
+                f'The stage "{name}" already exists in this laboratory.'
+            )
+
+        return WorkflowStage.objects.create(
+            laboratory=laboratory,
+            name=name,
+            order=WorkflowStageSelector.get_next_order(laboratory),
+            is_active=is_active,
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def update(stage, name=None, is_active=None):
+        """
+        Renames a stage or changes whether it is active.
+        """
+
+        if name is not None:
+            name = name.strip()
+
+            if not name:
+                raise ValueError("The stage name cannot be empty.")
+
+            duplicada = (
+                WorkflowStage.objects.filter(
+                    laboratory=stage.laboratory, name__iexact=name
+                )
+                .exclude(pk=stage.pk)
+                .exists()
+            )
+
+            if duplicada:
+                raise ValueError(
+                    f'The stage "{name}" already exists in this laboratory.'
+                )
+
+            stage.name = name
+
+        if is_active is not None:
+            stage.is_active = is_active
+
+        stage.save()
+
+        return stage
+
+    @staticmethod
+    def toggle_active(stage):
+        """
+        Activates a stage if it was inactive, and the other way round.
+        """
+
+        return WorkflowStageService.update(
+            stage, is_active=not stage.is_active
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def move(stage, direction):
+        """
+        Moves a stage one position up or down.
+
+        The swap only looks at the stages of the same laboratory, so
+        reordering never reaches another laboratory's sequence.
+        """
+
+        if direction not in ("up", "down"):
+            raise ValueError("Direction must be 'up' or 'down'.")
+
+        hermanas = WorkflowStage.objects.filter(
+            laboratory=stage.laboratory
+        )
+
+        if direction == "up":
+            vecina = (
+                hermanas.filter(order__lt=stage.order)
+                .order_by("-order")
+                .first()
+            )
+        else:
+            vecina = (
+                hermanas.filter(order__gt=stage.order)
+                .order_by("order")
+                .first()
+            )
+
+        # Ya esta en un extremo: no es un error, simplemente no se mueve.
+        if vecina is None:
+            return stage
+
+        stage.order, vecina.order = vecina.order, stage.order
+
+        stage.save(update_fields=["order", "updated_at"])
+        vecina.save(update_fields=["order", "updated_at"])
+
+        return stage
+
+    @staticmethod
+    @transaction.atomic
+    def delete(stage):
+        stage.delete()
