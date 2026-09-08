@@ -1,0 +1,15 @@
+{% extends "dental_cases/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+
+    <a href="{% url 'operational_reports' %}" class="btn btn-outline-secondary">
+        Volver a los reportes
+    </a>
+
+</div>
+{% endblock %}

@@ -27,6 +27,9 @@ urlpatterns = [
 
     # Inventory
     path("inventory/", include("apps.inventory.urls")),
+
+    # Operational reports
+    path("reports/", include("apps.reports.urls")),
 ]
 
 if settings.DEBUG:

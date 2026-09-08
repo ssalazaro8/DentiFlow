@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'apps.common',
     'apps.workflow',
     'apps.laboratories',
+    'apps.reports',
 ]
 
 MIDDLEWARE = [
