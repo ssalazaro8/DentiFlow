@@ -66,15 +66,24 @@ class DentalCaseSelector:
             status__in=[DentalCase.Status.COMPLETED, DentalCase.Status.DELIVERED]
         ).count()
         
-        # Agrupa y cuenta los casos por cada estado existente
-        cases_by_stage = base_qs.values('status').annotate(total=Count('id'))
+        # Agrupa y cuenta los casos por cada estado existente.
+        # Se agrega la etiqueta legible para no mostrar el valor crudo
+        # de la base ("IN_PROGRESS") en la pantalla.
+        cases_by_stage = list(
+            base_qs.values('status').annotate(total=Count('id'))
+        )
+
+        status_labels = dict(DentalCase.Status.choices)
+
+        for row in cases_by_stage:
+            row['label'] = status_labels.get(row['status'], row['status'])
         
         return {
             'pending': pending_cases,
             'in_progress': in_progress_cases,
             'completed': completed_cases,
             'total_active': pending_cases + in_progress_cases,
-            'cases_by_stage': list(cases_by_stage)
+            'cases_by_stage': cases_by_stage
         }
 
 
