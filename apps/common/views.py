@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import redirect
 
-# Create your views here.
+
+def home(request):
+    """Punto de entrada: cada usuario cae en el lugar que le corresponde."""
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+    return redirect("login")
