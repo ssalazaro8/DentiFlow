@@ -6,8 +6,11 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+from apps.common import views as common_views
 
 urlpatterns = [
+    # Home
+    path("", common_views.home, name="home"),
     path("admin/", admin.site.urls),
 
     # Clinics
