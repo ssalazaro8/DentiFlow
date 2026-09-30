@@ -8,6 +8,7 @@ from django.views.generic import TemplateView
 
 from apps.laboratories.models import Laboratory
 from apps.clinics.models import Clinic
+from apps.workflow.selectors import WorkflowUpdateSelector
 
 from .exceptions import DashboardMetricsError
 from .permissions import can_access_case, require_case_access
@@ -117,6 +118,10 @@ def dental_case_detail(request, case_id):
     # laboratory can operate the case through its own inbox.
     can_manage_laboratory = dental_case.laboratory is not None
 
+    timeline = []
+    if workflow:
+        timeline = WorkflowUpdateSelector.get_timeline_with_elapsed_time(workflow)
+
     return render(
         request,
         "dental_cases/detail.html",
@@ -126,6 +131,7 @@ def dental_case_detail(request, case_id):
             "assignment": assignment,
             "workflow": workflow,
             "can_manage_laboratory": can_manage_laboratory,
+            "timeline": timeline,
         },
     )
 
