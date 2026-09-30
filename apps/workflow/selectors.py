@@ -1,4 +1,6 @@
-from .models import Workflow, WorkflowStage
+from .models import Workflow, WorkflowStage, WorkflowUpdate
+from django.db.models import Prefetch
+from django.utils import timezone
 
 
 class WorkflowSelector:
@@ -61,3 +63,42 @@ class WorkflowStageSelector:
         )
 
         return (ultima.order + 1) if ultima else 1
+
+
+class WorkflowUpdateSelector:
+    """
+    FR-11: Consultas para la línea de tiempo de cambios de etapas.
+    """
+
+    @staticmethod
+    def get_timeline_for_workflow(workflow):
+        """
+        Obtiene todos los cambios de etapas de un workflow en orden cronológico.
+        Incluye información del usuario responsable y cálculo de tiempo transcurrido.
+        """
+        updates = WorkflowUpdate.objects.filter(
+            workflow=workflow
+        ).select_related('updated_by').order_by('created_at')
+
+        return updates
+
+    @staticmethod
+    def get_timeline_with_elapsed_time(workflow):
+        """
+        Obtiene el timeline con el tiempo transcurrido entre cada evento.
+        """
+        updates = WorkflowUpdateSelector.get_timeline_for_workflow(workflow)
+        timeline = []
+
+        for i, update in enumerate(updates):
+            elapsed_time = None
+            if i > 0:
+                prev_update = updates[i - 1]
+                elapsed_time = update.created_at - prev_update.created_at
+
+            timeline.append({
+                'update': update,
+                'elapsed_time': elapsed_time,
+            })
+
+        return timeline
