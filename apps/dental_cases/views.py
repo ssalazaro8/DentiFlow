@@ -12,6 +12,7 @@ from apps.workflow.selectors import WorkflowUpdateSelector
 
 from .exceptions import DashboardMetricsError
 from .permissions import can_access_case, require_case_access
+from .models import DentalCase
 
 from .forms import (
     DentalCaseCreateForm,
