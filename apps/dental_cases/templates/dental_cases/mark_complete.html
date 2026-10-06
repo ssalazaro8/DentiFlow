@@ -1,0 +1,72 @@
+{% extends "dental_cases/base.html" %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+            </div>
+            <div>
+                <h1 class="mb-0">{{ dental_case.case_number }}</h1>
+                <p class="text-muted mb-0">Marcar caso como completado</p>
+            </div>
+        </div>
+
+        <div class="card shadow-lg border-0 mb-4">
+            <div class="card-body p-5">
+                <h4 class="mb-4">Confirmación de completación</h4>
+
+                <div class="alert alert-info bg-light border-0 text-dark mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>¿Está seguro?</strong> Una vez marcado como completado, podrá proceder a registrar la entrega del caso.
+                </div>
+
+                <div class="bg-light p-4 rounded mb-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted d-block mb-1">Número de caso</small>
+                            <h6 class="mb-0">{{ dental_case.case_number }}</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted d-block mb-1">Clínica</small>
+                            <h6 class="mb-0">{{ dental_case.clinic_name }}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block mb-1">Estado actual</small>
+                            <span class="badge bg-info p-2">{{ dental_case.get_status_display }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block mb-1">Nuevo estado</small>
+                            <span class="badge bg-success p-2">Completado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-lg flex-grow-1">
+                        <i class="bi bi-check-lg me-2"></i> Confirmar completación
+                    </button>
+                    <a href="{% url 'dental_case_detail' dental_case.id %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-lg me-2"></i> Cancelar
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <h6 class="card-title">Próximos pasos</h6>
+                <ol class="small mb-0">
+                    <li>El caso pasará al estado <strong>Completado</strong></li>
+                    <li>Podrá registrar la entrega a la clínica destino</li>
+                    <li>Se creará un registro con fecha, clínica y usuario responsable</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

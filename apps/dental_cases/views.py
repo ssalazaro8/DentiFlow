@@ -8,9 +8,11 @@ from django.views.generic import TemplateView
 
 from apps.laboratories.models import Laboratory
 from apps.clinics.models import Clinic
+from apps.workflow.selectors import WorkflowUpdateSelector
 
 from .exceptions import DashboardMetricsError
 from .permissions import can_access_case, require_case_access
+from .models import DentalCase
 
 from .forms import (
     DentalCaseCreateForm,
@@ -113,9 +115,14 @@ def dental_case_detail(request, case_id):
     case_files = dental_case.files.all()
     assignment = getattr(dental_case, "technician_assignment", None)
     workflow = getattr(dental_case, "workflow", None)
+    delivery = getattr(dental_case, "delivery_registration", None)
     # Temporary demo mode: roles are not implemented yet, so the selected
     # laboratory can operate the case through its own inbox.
     can_manage_laboratory = dental_case.laboratory is not None
+
+    timeline = []
+    if workflow:
+        timeline = WorkflowUpdateSelector.get_timeline_with_elapsed_time(workflow)
 
     return render(
         request,
@@ -126,6 +133,8 @@ def dental_case_detail(request, case_id):
             "assignment": assignment,
             "workflow": workflow,
             "can_manage_laboratory": can_manage_laboratory,
+            "timeline": timeline,
+            "delivery": delivery,
         },
     )
 
@@ -409,4 +418,72 @@ def download_case_file_view(request, file_id: int):
         case_file.file.open("rb"),
         as_attachment=True,
         filename=case_file.filename,
+    )
+
+
+# --- FR-27: Registro de entrega ---
+
+
+@login_required
+def mark_case_complete(request, case_id):
+    """
+    FR-27: Marca un caso como completado.
+    """
+    dental_case = get_object_or_404(DentalCase, pk=case_id)
+
+    _require_laboratory_access(request, dental_case)
+
+    if request.method == "POST":
+        try:
+            DentalCaseService.mark_as_completed(dental_case)
+            messages.success(request, "Caso marcado como completado.")
+        except ValueError as e:
+            messages.error(request, str(e))
+
+        return redirect("dental_case_detail", case_id=case_id)
+
+    return render(
+        request,
+        "dental_cases/mark_complete.html",
+        {"dental_case": dental_case},
+    )
+
+
+@login_required
+def register_delivery(request, case_id):
+    """
+    FR-27: Registra la entrega de un caso completado.
+    """
+    dental_case = get_object_or_404(DentalCase, pk=case_id)
+
+    _require_laboratory_access(request, dental_case)
+
+    if request.method == "POST":
+        clinic_id = request.POST.get("destination_clinic")
+        notes = request.POST.get("notes", "")
+
+        try:
+            clinic = Clinic.objects.get(pk=clinic_id)
+            DentalCaseService.register_delivery(
+                dental_case,
+                destination_clinic=clinic,
+                registered_by=request.user,
+                notes=notes,
+            )
+            messages.success(request, "Entrega registrada correctamente.")
+        except Clinic.DoesNotExist:
+            messages.error(request, "La clínica seleccionada no existe.")
+        except ValueError as e:
+            messages.error(request, str(e))
+
+        return redirect("dental_case_detail", case_id=case_id)
+
+    clinics = Clinic.objects.all()
+    return render(
+        request,
+        "dental_cases/register_delivery.html",
+        {
+            "dental_case": dental_case,
+            "clinics": clinics,
+        },
     )

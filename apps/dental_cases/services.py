@@ -4,7 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .exceptions import DashboardMetricsError
-from .models import DentalCase, TechnicianAssignment
+from .models import DentalCase, TechnicianAssignment, DeliveryRegistration
 from .selectors import DentalCaseSelector
 
 logger = logging.getLogger(__name__)
@@ -243,3 +243,37 @@ class DentalCaseService:
         """
 
         case.delete()
+
+    @staticmethod
+    @transaction.atomic
+    def mark_as_completed(case):
+        """
+        FR-27: Marca un caso como completado.
+        Registra la fecha de completación y cambia el estado a COMPLETED.
+        """
+        if case.status != DentalCase.Status.IN_PROGRESS:
+            raise ValueError("Only in-progress cases can be marked as completed.")
+
+        return DentalCaseService.update_status(case, DentalCase.Status.COMPLETED)
+
+    @staticmethod
+    @transaction.atomic
+    def register_delivery(case, destination_clinic, registered_by, notes=""):
+        """
+        FR-27: Registra la entrega de un caso completado.
+        Cambia el estado a DELIVERED y crea el registro de entrega.
+        """
+        if case.status != DentalCase.Status.COMPLETED:
+            raise ValueError("Only completed cases can be delivered.")
+
+        DentalCaseService.update_status(case, DentalCase.Status.DELIVERED)
+
+        delivery = DeliveryRegistration.objects.create(
+            dental_case=case,
+            destination_clinic=destination_clinic,
+            registered_by=registered_by,
+            notes=notes,
+            completed_at=timezone.now(),
+        )
+
+        return delivery
