@@ -1,0 +1,31 @@
+{% extends "dental_cases/base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>{{ dental_case.case_number }}</h1>
+        <p class="text-muted mb-0">Marcar caso como completado</p>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Confirmación</h5>
+    </div>
+    <div class="card-body">
+        <p>¿Está seguro de que desea marcar este caso como completado?</p>
+        <p class="mb-3">
+            <strong>Caso:</strong> {{ dental_case.case_number }}<br>
+            <strong>Clínica:</strong> {{ dental_case.clinic_name }}<br>
+            <strong>Estado actual:</strong> <span class="badge bg-info">{{ dental_case.get_status_display }}</span>
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Marcar como completado</button>
+            <a href="{% url 'dental_case_detail' dental_case.id %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "dental_cases/base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>{{ dental_case.case_number }}</h1>
+        <p class="text-muted mb-0">Registrar entrega</p>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Información de entrega</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="destination_clinic" class="form-label">Clínica destino</label>
+                <select name="destination_clinic" id="destination_clinic" class="form-select" required>
+                    <option value="">-- Seleccionar clínica --</option>
+                    {% for clinic in clinics %}
+                        <option value="{{ clinic.id }}">{{ clinic.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="notes" class="form-label">Notas de entrega</label>
+                <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Escriba cualquier nota adicional sobre la entrega..."></textarea>
+            </div>
+
+            <div class="mb-3 p-3 bg-light rounded">
+                <strong>Información del caso</strong><br>
+                <small>
+                    Caso: {{ dental_case.case_number }}<br>
+                    Estado: <span class="badge bg-warning">{{ dental_case.get_status_display }}</span><br>
+                    Usuario: {{ request.user.get_full_name|default:request.user.username }}
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-success">Registrar entrega</button>
+            <a href="{% url 'dental_case_detail' dental_case.id %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

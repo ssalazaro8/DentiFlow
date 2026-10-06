@@ -176,3 +176,55 @@ class DentalCaseFile(models.Model):
         if self.file and hasattr(self.file, "name"):
             return os.path.basename(self.file.name)
         return ""
+
+
+class DeliveryRegistration(models.Model):
+    """
+    FR-27: Registro de entrega de casos completados.
+    Guarda la información cuando un caso se entrega a la clínica.
+    """
+
+    dental_case = models.OneToOneField(
+        DentalCase,
+        on_delete=models.CASCADE,
+        related_name="delivery_registration",
+        verbose_name="Dental Case",
+    )
+
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Completed At",
+    )
+
+    delivered_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Delivered At",
+    )
+
+    destination_clinic = models.ForeignKey(
+        Clinic,
+        on_delete=models.PROTECT,
+        related_name="received_deliveries",
+        verbose_name="Destination Clinic",
+    )
+
+    registered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="registered_deliveries",
+        verbose_name="Registered By",
+    )
+
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Delivery Notes",
+    )
+
+    class Meta:
+        verbose_name = "Delivery Registration"
+        verbose_name_plural = "Delivery Registrations"
+        ordering = ["-delivered_at"]
+
+    def __str__(self):
+        return f"{self.dental_case.case_number} - Entregado"

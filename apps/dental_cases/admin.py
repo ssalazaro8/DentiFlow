@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DentalCase, TechnicianAssignment
+from .models import DentalCase, TechnicianAssignment, DeliveryRegistration
 
 
 @admin.register(DentalCase)
@@ -48,3 +48,12 @@ class DentalCaseAdmin(admin.ModelAdmin):
 class TechnicianAssignmentAdmin(admin.ModelAdmin):
     list_display = ("dental_case", "technician", "assigned_at")
     search_fields = ("dental_case__case_number", "technician__username")
+
+
+@admin.register(DeliveryRegistration)
+class DeliveryRegistrationAdmin(admin.ModelAdmin):
+    list_display = ("dental_case", "destination_clinic", "registered_by", "delivered_at")
+    list_filter = ("delivered_at", "destination_clinic")
+    search_fields = ("dental_case__case_number", "destination_clinic__name")
+    readonly_fields = ("delivered_at",)
+    ordering = ("-delivered_at",)
