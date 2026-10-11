@@ -90,6 +90,32 @@ class DentalCaseService:
         )
 
     @staticmethod
+    def get_visible_cases(user):
+        return DentalCaseSelector.get_visible_to(user)
+
+    @staticmethod
+    def filter_cases(cases, filters=None):
+        """
+        Applies the search term and the list filters to a queryset.
+        """
+
+        filters = filters or {}
+
+        if filters.get("q"):
+            cases = DentalCaseSelector.search(
+                cases,
+                filters["q"],
+            )
+
+        return DentalCaseSelector.filter_by(
+            cases,
+            status=filters.get("status"),
+            service_type=filters.get("service_type"),
+            due_from=filters.get("due_from"),
+            due_to=filters.get("due_to"),
+        )
+
+    @staticmethod
     @transaction.atomic
     def create(data, created_by=None):
         """
