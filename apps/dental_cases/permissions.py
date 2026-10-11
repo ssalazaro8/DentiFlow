@@ -1,4 +1,5 @@
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 
 # Shown to the user when they are not related to the case. It stays
 # deliberately vague: confirming that a case exists is already more
@@ -31,6 +32,25 @@ def can_access_case(user, dental_case):
             pk=user.pk
         ).exists()
     )
+
+
+def filter_accessible_cases(user, cases):
+    """
+    Narrows a queryset to the dental cases the user may see.
+
+    It is the queryset form of can_access_case: both must grant
+    access to exactly the same cases.
+    """
+
+    if not user.is_authenticated:
+        return cases.none()
+
+    if user.is_superuser:
+        return cases
+
+    return cases.filter(
+        Q(created_by=user) | Q(laboratory__authorized_users=user)
+    ).distinct()
 
 
 def require_case_access(user, dental_case):
