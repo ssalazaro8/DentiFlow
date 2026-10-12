@@ -29,7 +29,7 @@
         <tbody>
             {% for lab in laboratories %}
             <tr>
-                <td><strong>{{ lab.name }}</strong></td>
+                <td><strong><a href="{% url 'laboratory_detail' lab.id %}" class="text-decoration-none">{{ lab.name }}</a></strong></td>
                 <td>{{ lab.get_service_display }}</td>
                 <td>{{ lab.city }}</td>
                 <td>{{ lab.phone }}</td>

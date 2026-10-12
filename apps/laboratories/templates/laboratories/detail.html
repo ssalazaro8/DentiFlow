@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ laboratory.name }} - DentiFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-flask me-2"></i>{{ laboratory.name }}</h1>
+        <p class="text-muted">{{ laboratory.service }} - {{ laboratory.city }}</p>
+    </div>
+    <a href="{% url 'laboratory_list' %}" class="btn btn-secondary">Back to Labs</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Contact</h6>
+                <p class="mb-1"><strong>Phone:</strong> {{ laboratory.phone }}</p>
+                <p class="mb-0"><strong>Email:</strong> {{ laboratory.email }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Rating</h6>
+                <p class="mb-0">⭐ {{ laboratory.rating }}/5.0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Cases</h6>
+                <p class="mb-0"><strong>{{ cases.count }}</strong> total</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Assigned Cases</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Case #</th>
+                        <th>Clinic</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in cases %}
+                    <tr>
+                        <td><strong>{{ case.case_number }}</strong></td>
+                        <td>{{ case.clinic.name }}</td>
+                        <td>{{ case.get_service_type_display }}</td>
+                        <td>
+                            {% if case.status == "SUBMITTED" %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% elif case.status == "ACCEPTED" %}
+                                <span class="badge bg-info">Accepted</span>
+                            {% elif case.status == "IN_PROGRESS" %}
+                                <span class="badge bg-primary">In Progress</span>
+                            {% elif case.status == "COMPLETED" %}
+                                <span class="badge bg-secondary">Completed</span>
+                            {% elif case.status == "DELIVERED" %}
+                                <span class="badge bg-success">Delivered</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ case.due_date|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'dental_case_detail' case.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No cases assigned yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
