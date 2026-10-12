@@ -151,3 +151,116 @@ class TechnicianAssignmentForm(forms.Form):
                 .all()
                 .order_by("first_name", "last_name", "username")
             )
+
+
+class DentalCaseFilterForm(forms.Form):
+    """
+    Search term and filters of the dental case list.
+
+    Every field is optional: with none of them filled the list shows
+    every case the user is allowed to see.
+    """
+
+    q = forms.CharField(
+        required=False,
+        max_length=150,
+        label="Search",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Case number, clinic or requester",
+            }
+        ),
+    )
+
+    status = forms.ChoiceField(
+        required=False,
+        label="Status",
+        choices=[("", "All statuses")] + list(DentalCase.Status.choices),
+        widget=forms.Select(
+            attrs={"class": "form-select"}
+        ),
+    )
+
+    service_type = forms.ChoiceField(
+        required=False,
+        label="Service",
+        choices=[("", "All services")] + list(DentalCase.SERVICE_TYPES),
+        widget=forms.Select(
+            attrs={"class": "form-select"}
+        ),
+    )
+
+    due_from = forms.DateField(
+        required=False,
+        label="Due from",
+        widget=forms.DateInput(
+            attrs={
+                "class": "form-control",
+                "type": "date",
+            }
+        ),
+    )
+
+    due_to = forms.DateField(
+        required=False,
+        label="Due to",
+        widget=forms.DateInput(
+            attrs={
+                "class": "form-control",
+                "type": "date",
+            }
+        ),
+    )
+
+    def clean(self):
+
+        cleaned_data = super().clean()
+
+        due_from = cleaned_data.get("due_from")
+        due_to = cleaned_data.get("due_to")
+
+        if due_from and due_to and due_from > due_to:
+            self.add_error(
+                "due_to",
+                "The end date cannot be earlier than the start date.",
+            )
+
+        return cleaned_data
+
+    def as_filters(self):
+        """
+        Returns the cleaned filters, dropping the empty ones.
+        """
+
+        if not self.is_valid():
+            return {}
+
+        return {
+            name: value
+            for name, value in self.cleaned_data.items()
+            if value
+        }
+
+    def applied_filters(self):
+        """
+        Returns the applied filters with a readable value, for display.
+        """
+
+        applied = []
+
+        for name, value in self.as_filters().items():
+
+            field = self.fields[name]
+
+            if isinstance(field, forms.ChoiceField):
+                value = dict(field.choices).get(value, value)
+
+            applied.append(
+                {
+                    "label": field.label,
+                    "value": value,
+                }
+            )
+
+        return applied

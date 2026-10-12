@@ -16,6 +16,7 @@ from .models import DentalCase
 
 from .forms import (
     DentalCaseCreateForm,
+    DentalCaseFilterForm,
     DentalCaseUpdateForm,
     RejectionForm,
     TechnicianAssignmentForm,
@@ -37,12 +38,46 @@ def _can_view_case(user, dental_case):
     return can_access_case(user, dental_case)
 
 
+def _render_case_list(request, dental_cases, **context):
+    """
+    Renders a case list with the search and the filters applied.
+
+    The general list and both inboxes go through here, so searching
+    and filtering behave the same wherever cases are listed.
+    """
+
+    form = DentalCaseFilterForm(
+        request.GET or None
+    )
+
+    context.update(
+        {
+            "dental_cases": DentalCaseService.filter_cases(
+                dental_cases,
+                form.as_filters(),
+            ),
+            "form": form,
+            "applied_filters": form.applied_filters(),
+        }
+    )
+
+    return render(
+        request,
+        "dental_cases/list.html",
+        context,
+    )
+
+
+@login_required
 def dental_case_list(request):
     """
-    Displays all dental cases.
+    Displays the dental cases the user is allowed to see.
     """
-    cases = DentalCase.objects.all().order_by('-created_at')
-    return render(request, 'dental_cases/list.html', {'cases': cases})
+
+    return _render_case_list(
+        request,
+        DentalCaseService.get_visible_cases(request.user),
+    )
 
 
 def dental_case_create(request):
@@ -141,14 +176,14 @@ def laboratory_case_inbox(request, laboratory_id):
     """Private inbox of proposals sent to one laboratory."""
     laboratory = get_object_or_404(Laboratory, pk=laboratory_id)
     dental_cases = DentalCaseService.get_all().filter(laboratory=laboratory)
-    return render(request, "dental_cases/list.html", {"dental_cases": dental_cases, "laboratory": laboratory})
+    return _render_case_list(request, dental_cases, laboratory=laboratory)
 
 
 def clinic_case_inbox(request, clinic_id):
     """Temporary clinic-side inbox until identity and roles are enabled."""
     clinic = get_object_or_404(Clinic, pk=clinic_id)
     dental_cases = DentalCaseService.get_all().filter(clinic=clinic)
-    return render(request, "dental_cases/list.html", {"dental_cases": dental_cases, "clinic": clinic})
+    return _render_case_list(request, dental_cases, clinic=clinic)
 
 
 def dental_case_edit(request, case_id):
