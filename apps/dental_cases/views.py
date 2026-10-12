@@ -41,10 +41,8 @@ def dental_case_list(request):
     """
     Displays all dental cases.
     """
-
-    # There is no role-aware identity yet, so do not expose an all-cases list.
-    # Users enter through a selected clinic or laboratory inbox instead.
-    return redirect("dental_case_create")
+    cases = DentalCase.objects.all().order_by('-created_at')
+    return render(request, 'dental_cases/list.html', {'cases': cases})
 
 
 def dental_case_create(request):
@@ -470,7 +468,7 @@ def register_delivery(request, case_id):
                 registered_by=request.user,
                 notes=notes,
             )
-            messages.success(request, "Entrega registrada correctamente.")
+            messages.success(request, "Delivery registered successfully.")
         except Clinic.DoesNotExist:
             messages.error(request, "La clínica seleccionada no existe.")
         except ValueError as e:
