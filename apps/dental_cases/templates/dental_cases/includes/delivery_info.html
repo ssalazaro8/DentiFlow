@@ -10,34 +10,34 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <small class="text-muted d-block mb-1">
-                            <i class="bi bi-hospital me-1"></i> Clínica destino
+                            <i class="bi bi-hospital me-1"></i> Destination Clinic
                         </small>
                         <h6 class="mb-0">{{ delivery.destination_clinic.name }}</h6>
                     </div>
                     <div class="col-md-6 mb-3">
                         <small class="text-muted d-block mb-1">
-                            <i class="bi bi-calendar-event me-1"></i> Fecha de entrega
+                            <i class="bi bi-calendar-event me-1"></i> Delivery Date
                         </small>
-                        <h6 class="mb-0">{{ delivery.delivered_at|date:"d \d\e M, Y H:i" }}</h6>
+                        <h6 class="mb-0">{{ delivery.delivered_at|date:"d M, Y H:i" }}</h6>
                     </div>
                     <div class="col-md-6 mb-3">
                         <small class="text-muted d-block mb-1">
-                            <i class="bi bi-person-circle me-1"></i> Registrado por
+                            <i class="bi bi-person-circle me-1"></i> Registered by
                         </small>
                         <h6 class="mb-0">{{ delivery.registered_by.get_full_name|default:delivery.registered_by.username }}</h6>
                     </div>
                     <div class="col-md-6 mb-3">
                         <small class="text-muted d-block mb-1">
-                            <i class="bi bi-check-circle me-1"></i> Estado
+                            <i class="bi bi-check-circle me-1"></i> Status
                         </small>
                         <span class="badge bg-success p-2">
-                            <i class="bi bi-check-lg me-1"></i> Entregado
+                            <i class="bi bi-check-lg me-1"></i> Delivered
                         </span>
                     </div>
                     {% if delivery.notes %}
                         <div class="col-12 mt-3 pt-3 border-top">
                             <small class="text-muted d-block mb-2">
-                                <i class="bi bi-chat-left-text me-1"></i> Notas
+                                <i class="bi bi-chat-left-text me-1"></i> Notes
                             </small>
                             <p class="mb-0 text-secondary">{{ delivery.notes }}</p>
                         </div>
@@ -53,9 +53,9 @@
                 <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem;"></i>
             </div>
             <div>
-                <h6 class="alert-heading mb-1">Caso completado, pendiente de entrega</h6>
+                <h6 class="alert-heading mb-1">Completed case, pending delivery</h6>
                 <p class="mb-0">
-                    Este caso está completado y listo para entregar. Use el botón <strong>"Registrar entrega"</strong> para formalizar la entrega a la clínica destino.
+                    This case is completed and ready to deliver. Use the <strong>"Register Delivery"</strong> button to formalize the delivery to the destination clinic.
                 </p>
             </div>
         </div>

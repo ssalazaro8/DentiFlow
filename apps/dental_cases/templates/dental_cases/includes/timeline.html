@@ -7,11 +7,11 @@
                 <div class="col-md-8">
                     <h6 class="mb-2">
                         <span class="badge bg-primary">
-                            {{ item.update.get_previous_stage_display|default:"Inicio" }} → {{ item.update.get_stage_display }}
+                            {{ item.update.get_previous_stage_display|default:"Start" }} → {{ item.update.get_stage_display }}
                         </span>
                     </h6>
                     <p class="mb-2">
-                        <strong>Responsable:</strong> {{ item.update.updated_by.get_full_name|default:item.update.updated_by.username|default:"Sistema" }}
+                        <strong>Responsible:</strong> {{ item.update.updated_by.get_full_name|default:item.update.updated_by.username|default:"System" }}
                     </p>
                     {% if item.update.comment %}
                         <p class="mb-0 text-muted">
@@ -26,7 +26,7 @@
                     {% if item.elapsed_time %}
                         <p class="mb-0">
                             <small class="badge bg-light text-dark">
-                                Tiempo: {{ item.elapsed_time|format_elapsed_time }}
+                                Time: {{ item.elapsed_time|format_elapsed_time }}
                             </small>
                         </p>
                     {% endif %}
@@ -36,7 +36,7 @@
     {% endfor %}
 {% else %}
     <div class="alert alert-info mb-0" role="alert">
-        <strong>Sin eventos registrados</strong>
-        <p class="mb-0">Aún no hay cambios de etapa registrados para este caso.</p>
+        <strong>No events recorded</strong>
+        <p class="mb-0">There are no stage changes recorded for this case yet.</p>
     </div>
 {% endif %}
