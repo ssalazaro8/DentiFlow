@@ -29,3 +29,13 @@ def clinic_create(request):
             "form": form
         }
     )
+
+from django.contrib.auth.decorators import login_required
+from apps.dental_cases.services import DentalCaseService
+
+@login_required
+def clinic_detail(request, clinic_id):
+    """Clinic detail page showing their cases."""
+    clinic = get_object_or_404(Clinic, pk=clinic_id)
+    cases = DentalCaseService.get_all().filter(clinic=clinic).order_by('-created_at')
+    return render(request, "clinics/detail.html", {"clinic": clinic, "cases": cases})

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastrear Pedido - DentiFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background: #f5f5f5; }
+
+        .track-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+            color: white;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .track-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .track-hero p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .search-form input {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .search-form button {
+            padding: 1rem 2rem;
+            background: #fff;
+            color: #667eea;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-form button:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+        }
+
+        .case-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .case-clinic {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .result-body {
+            padding: 2rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            margin: 1rem 0;
+            background: #c8e6c9;
+            color: #1b5e20;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .info-item {
+            background: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            color: #333;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-track {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-track:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .timeline-marker {
+            position: relative;
+            width: 64px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .timeline-marker::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            border: 3px solid white;
+            left: 22px;
+            z-index: 2;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        }
+
+        .timeline-content {
+            flex-grow: 1;
+            padding: 1.25rem;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+        }
+
+        .timeline-content h6 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-stage {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #e7f1ff;
+            color: #0d6efd;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .timeline-date {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-left: 1rem;
+        }
+
+        .timeline-elapsed {
+            background-color: #f0f6ff;
+            border-left: 3px solid #0d6efd;
+            padding: 0.5rem 0.75rem;
+            margin-top: 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            color: #0d6efd;
+            font-weight: 500;
+        }
+
+        .delivery-box {
+            border-left: 5px solid #28a745;
+            background: #f0f8f4;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .delivery-title {
+            color: #1b5e20;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="bi bi-box-seam me-2"></i> DentiFlow
+        </a>
+    </div>
+</nav>
+
+<main class="container py-4">
+    <div class="track-hero">
+        <div class="search-container">
+            <h1>
+                <i class="bi bi-box-seam"></i>
+                Rastrear mi Pedido
+            </h1>
+            <p>Ingrese el número de orden para ver el estado de su caso dental</p>
+
+            <form class="search-form">
+                <input type="text" placeholder="Ej: CASO-001" value="CASO-001">
+                <button type="button">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="search-container">
+        <div class="result-card">
+            <div class="result-header">
+                <div class="case-number">CASO-001</div>
+                <div class="case-clinic">Clínica Sonría</div>
+            </div>
+
+            <div class="result-body">
+                <div>
+                    <strong>Estado actual:</strong>
+                    <span class="status-badge">
+                        <i class="bi bi-check-circle me-1"></i> Entregado
+                    </span>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="bi bi-calendar-event me-1"></i> Fecha de envío
+                        </div>
+                        <div class="info-value">07 Sep, 2026</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="bi bi-tool me-1"></i> Tipo de servicio
+                        </div>
+                        <div class="info-value">Corona Dental</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="bi bi-calendar2-check me-1"></i> Fecha límite
+                        </div>
+                        <div class="info-value">09 Sep, 2026</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="bi bi-person me-1"></i> Solicitado por
+                        </div>
+                        <div class="info-value">Dr. Alejandro</div>
+                    </div>
+                </div>
+
+                <hr>
+                <h5 class="mt-4 mb-3">
+                    <i class="bi bi-hourglass-split text-primary me-2"></i> Progreso de Producción
+                </h5>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h6 class="mb-2">
+                            <span class="timeline-stage">Inicio → Recibido</span>
+                        </h6>
+                        <p class="mb-2">
+                            <strong>Responsable:</strong> Samuel
+                        </p>
+                        <p class="mb-0">Flujo de producción iniciado.</p>
+                        <div class="timeline-date">07 Sep, 2026 22:23</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h6 class="mb-2">
+                            <span class="timeline-stage">Recibido → Diseño</span>
+                        </h6>
+                        <p class="mb-2">
+                            <strong>Responsable:</strong> Samuel
+                        </p>
+                        <div class="timeline-date">07 Sep, 2026 22:32</div>
+                        <div class="timeline-elapsed">
+                            <i class="bi bi-hourglass-split me-1"></i>
+                            Tiempo transcurrido: 8m
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h6 class="mb-2">
+                            <span class="timeline-stage">Diseño → Control de Calidad</span>
+                        </h6>
+                        <p class="mb-2">
+                            <strong>Responsable:</strong> Samuel
+                        </p>
+                        <div class="timeline-date">08 Sep, 2026 13:06</div>
+                        <div class="timeline-elapsed">
+                            <i class="bi bi-hourglass-split me-1"></i>
+                            Tiempo transcurrido: 14h 34m
+                        </div>
+                    </div>
+                </div>
+
+                <div class="delivery-box">
+                    <div class="delivery-title">
+                        <i class="bi bi-box-seam me-2"></i> Información de Entrega
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted d-block mb-1">
+                                <i class="bi bi-hospital me-1"></i> Clínica destino
+                            </small>
+                            <h6 class="mb-0">Clínica Sonría</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted d-block mb-1">
+                                <i class="bi bi-calendar-event me-1"></i> Fecha de entrega
+                            </small>
+                            <h6 class="mb-0">30 Sep, 2026 02:53</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted d-block mb-1">
+                                <i class="bi bi-person-circle me-1"></i> Registrado por
+                            </small>
+                            <h6 class="mb-0">Samuel</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted d-block mb-1">
+                                <i class="bi bi-check-circle me-1"></i> Estado
+                            </small>
+                            <span class="badge bg-success p-2">
+                                <i class="bi bi-check-lg me-1"></i> Entregado
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="btn-track">
+                        <i class="bi bi-printer me-2"></i> Imprimir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

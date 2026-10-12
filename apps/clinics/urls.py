@@ -17,4 +17,10 @@ urlpatterns = [
         name="clinic_create"
     ),
 
+    path(
+        "<int:clinic_id>/",
+        views.clinic_detail,
+        name="clinic_detail"
+    ),
+
 ]

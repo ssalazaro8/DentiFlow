@@ -46,6 +46,10 @@ urlpatterns = [
     path("<int:case_id>/technician/", views.technician_assignment, name="technician_assignment"),
     path("<int:case_id>/technician/remove/", views.technician_assignment_remove, name="technician_assignment_remove"),
 
+    # FR-27: Registro de entrega
+    path("<int:case_id>/complete/", views.mark_case_complete, name="mark_case_complete"),
+    path("<int:case_id>/deliver/", views.register_delivery, name="register_delivery"),
+
     path(
         "<int:case_id>/files/",
         include(

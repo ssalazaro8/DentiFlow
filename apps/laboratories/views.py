@@ -1,13 +1,11 @@
-from django.shortcuts import render
-
-# Create your views here.
-
-from django.shortcuts import render, redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from .forms import LaboratoryForm, TechnicianCreateForm
 from .models import Laboratory
 from .services import LaboratoryService
+from apps.dental_cases.models import DentalCase
+from apps.dental_cases.services import DentalCaseService
 
 def laboratory_list(request):
     """Muestra la lista de todos los laboratorios."""
@@ -87,5 +85,21 @@ def technician_create(request, laboratory_id):
         {
             "laboratory": laboratory,
             "form": form,
+        },
+    )
+
+
+@login_required
+def laboratory_detail(request, laboratory_id):
+    """Laboratory detail page showing their assigned cases."""
+    laboratory = get_object_or_404(Laboratory, pk=laboratory_id)
+    # Show only cases assigned to this laboratory
+    cases = DentalCaseService.get_all().filter(laboratory=laboratory).order_by('-created_at')
+    return render(
+        request,
+        "laboratories/detail.html",
+        {
+            "laboratory": laboratory,
+            "cases": cases,
         },
     )

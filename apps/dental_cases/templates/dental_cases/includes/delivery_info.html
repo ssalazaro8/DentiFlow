@@ -1,0 +1,64 @@
+{% if delivery %}
+    <div class="mb-4 p-4 border-start border-success border-5 bg-success bg-opacity-5 rounded">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                    <i class="bi bi-box-seam text-success" style="font-size: 1.5rem;"></i>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted d-block mb-1">
+                            <i class="bi bi-hospital me-1"></i> Destination Clinic
+                        </small>
+                        <h6 class="mb-0">{{ delivery.destination_clinic.name }}</h6>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted d-block mb-1">
+                            <i class="bi bi-calendar-event me-1"></i> Delivery Date
+                        </small>
+                        <h6 class="mb-0">{{ delivery.delivered_at|date:"d M, Y H:i" }}</h6>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted d-block mb-1">
+                            <i class="bi bi-person-circle me-1"></i> Registered by
+                        </small>
+                        <h6 class="mb-0">{{ delivery.registered_by.get_full_name|default:delivery.registered_by.username }}</h6>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted d-block mb-1">
+                            <i class="bi bi-check-circle me-1"></i> Status
+                        </small>
+                        <span class="badge bg-success p-2">
+                            <i class="bi bi-check-lg me-1"></i> Delivered
+                        </span>
+                    </div>
+                    {% if delivery.notes %}
+                        <div class="col-12 mt-3 pt-3 border-top">
+                            <small class="text-muted d-block mb-2">
+                                <i class="bi bi-chat-left-text me-1"></i> Notes
+                            </small>
+                            <p class="mb-0 text-secondary">{{ delivery.notes }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% elif dental_case.status == "COMPLETED" %}
+    <div class="alert alert-warning alert-dismissible fade show border-2" role="alert">
+        <div class="d-flex align-items-center gap-3">
+            <div>
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem;"></i>
+            </div>
+            <div>
+                <h6 class="alert-heading mb-1">Completed case, pending delivery</h6>
+                <p class="mb-0">
+                    This case is completed and ready to deliver. Use the <strong>"Register Delivery"</strong> button to formalize the delivery to the destination clinic.
+                </p>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endif %}
