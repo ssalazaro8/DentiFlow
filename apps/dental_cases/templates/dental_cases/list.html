@@ -27,6 +27,137 @@
 </div>
 
 
+<div class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <form
+            method="get"
+            class="row g-3 align-items-end"
+        >
+
+            <div class="col-md-4">
+
+                <label
+                    for="{{ form.q.id_for_label }}"
+                    class="form-label"
+                >
+                    {{ form.q.label }}
+                </label>
+
+                {{ form.q }}
+
+            </div>
+
+            <div class="col-md-2">
+
+                <label
+                    for="{{ form.status.id_for_label }}"
+                    class="form-label"
+                >
+                    {{ form.status.label }}
+                </label>
+
+                {{ form.status }}
+
+            </div>
+
+            <div class="col-md-2">
+
+                <label
+                    for="{{ form.service_type.id_for_label }}"
+                    class="form-label"
+                >
+                    {{ form.service_type.label }}
+                </label>
+
+                {{ form.service_type }}
+
+            </div>
+
+            <div class="col-md-2">
+
+                <label
+                    for="{{ form.due_from.id_for_label }}"
+                    class="form-label"
+                >
+                    {{ form.due_from.label }}
+                </label>
+
+                {{ form.due_from }}
+
+            </div>
+
+            <div class="col-md-2">
+
+                <label
+                    for="{{ form.due_to.id_for_label }}"
+                    class="form-label"
+                >
+                    {{ form.due_to.label }}
+                </label>
+
+                {{ form.due_to }}
+
+            </div>
+
+            {% for error in form.due_to.errors %}
+
+            <div class="col-12 text-danger small">
+                {{ error }}
+            </div>
+
+            {% endfor %}
+
+            <div class="col-12">
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Search
+                </button>
+
+                {% if applied_filters %}
+
+                <a
+                    href="{{ request.path }}"
+                    class="btn btn-outline-secondary"
+                >
+                    Clear filters
+                </a>
+
+                {% endif %}
+
+            </div>
+
+        </form>
+
+        {% if applied_filters %}
+
+        <div class="mt-3">
+
+            <span class="text-muted small">
+                Applied filters:
+            </span>
+
+            {% for filter in applied_filters %}
+
+            <span class="badge bg-secondary">
+                {{ filter.label }}: {{ filter.value }}
+            </span>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
 {% if dental_cases %}
 
 <div class="card shadow-sm">
@@ -184,6 +315,25 @@
 
     <div class="card-body text-center py-5">
 
+        {% if applied_filters %}
+
+        <h4>
+            No dental cases match your search
+        </h4>
+
+        <p class="text-muted">
+            Try a different term or clear the filters.
+        </p>
+
+        <a
+            href="{{ request.path }}"
+            class="btn btn-outline-secondary"
+        >
+            Clear filters
+        </a>
+
+        {% else %}
+
         <h4>
             No dental cases registered
         </h4>
@@ -198,6 +348,8 @@
         >
             Create Dental Case
         </a>
+
+        {% endif %}
 
     </div>
 

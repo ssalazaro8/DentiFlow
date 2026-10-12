@@ -1,7 +1,8 @@
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 
 from .models import DentalCase, DentalCaseFile
+from .permissions import filter_accessible_cases
 
 
 class DentalCaseSelector:
@@ -48,6 +49,54 @@ class DentalCaseSelector:
         return DentalCase.objects.filter(
             clinic_name__iexact=clinic_name
         )
+
+    @staticmethod
+    def get_visible_to(user):
+        """
+        Returns the dental cases the user is allowed to see.
+        """
+        return filter_accessible_cases(
+            user,
+            DentalCaseSelector.get_all(),
+        )
+
+    @staticmethod
+    def search(cases, term):
+        """
+        Narrows a queryset to the cases whose number, clinic or
+        requester contains the term, ignoring upper and lower case.
+        """
+        return cases.filter(
+            Q(case_number__icontains=term)
+            | Q(clinic_name__icontains=term)
+            | Q(requested_by__icontains=term)
+        )
+
+    @staticmethod
+    def filter_by(
+        cases,
+        status=None,
+        service_type=None,
+        due_from=None,
+        due_to=None,
+    ):
+        """
+        Narrows a queryset by status, service type and due date range.
+        """
+
+        if status:
+            cases = cases.filter(status=status)
+
+        if service_type:
+            cases = cases.filter(service_type=service_type)
+
+        if due_from:
+            cases = cases.filter(due_date__gte=due_from)
+
+        if due_to:
+            cases = cases.filter(due_date__lte=due_to)
+
+        return cases
 
     @staticmethod
     def get_dashboard_metrics():
