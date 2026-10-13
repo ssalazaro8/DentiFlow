@@ -15,4 +15,10 @@ urlpatterns = [
         views.material_update_stock,
         name="material_update_stock"
     ),
+
+    path(
+        "cases/<int:case_id>/consumptions/new/",
+        views.register_material_consumption,
+        name="register_material_consumption"
+    ),
 ]
