@@ -1,157 +1,87 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <title>Case Status History</title>
+{% block title %}Case Status History - DentiFlow{% endblock %}
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f5f5f5;
-        }
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
 
-        .history-container {
-            max-width: 800px;
-            margin: auto;
-        }
+        <h1><i class="fas fa-history me-2"></i>Case Status History</h1>
 
-        .history-card {
-            background-color: white;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .status-change {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 14px;
-        }
-
-        .previous {
-            background-color: #e0e0e0;
-            color: #333333;
-        }
-
-        .new {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-
-        .arrow {
-            margin: 0 10px;
-            font-weight: bold;
-        }
-
-        .info {
-            color: #555555;
-            margin-top: 8px;
-        }
-
-        .back-button {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-
-        .back-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="history-container">
-
-    <h1>Case Status History</h1>
-
-    <h2>
-        Case: {{ workflow.dental_case.case_number }}
-    </h2>
-
-    <p>
-        <strong>Current status:</strong>
-        {{ workflow.get_current_stage_display }}
-    </p>
-
-    <h2>Status Changes</h2>
-
-    {% for record in history %}
-
-        <div class="history-card">
-
-            <div class="status-change">
-
-                <span class="status previous">
-                    {% if record.previous_stage %}{{ record.get_previous_stage_display }}{% else %}Inicio{% endif %}
-                </span>
-
-                <span class="arrow">
-                    →
-                </span>
-
-                <span class="status new">
-                    {{ record.get_stage_display }}
-                </span>
-
-            </div>
-
-            <p class="info">
-                <strong>Progress:</strong>
-                {{ record.progress_percentage }}%
-            </p>
-
-            {% if record.comment %}
-            <p class="info">
-                <strong>Comment:</strong>
-                {{ record.comment }}
-            </p>
-            {% endif %}
-
-            <p class="info">
-                <strong>Changed by:</strong>
-                {{ record.updated_by.username|default:"Sin registrar" }}
-            </p>
-
-            <p class="info">
-                <strong>Date:</strong>
-                {{ record.created_at }}
-            </p>
-
-        </div>
-
-    {% empty %}
+        <h2 class="h4">
+            Case: {{ workflow.dental_case.case_number }}
+        </h2>
 
         <p>
-            No status changes have been recorded.
+            <strong>Current status:</strong>
+            <span class="df-stage df-stage-{{ workflow.current_stage|lower }}">
+                {{ workflow.get_current_stage_display }}
+            </span>
         </p>
 
-    {% endfor %}
+        <h2 class="h5 mt-4 mb-3">Status Changes</h2>
 
-    <a
-        class="back-button"
-        href="{% url 'workflow_list' %}"
-    >
-        Back to Cases
-    </a>
+        {% for record in history %}
 
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+
+                    <div class="mb-2">
+
+                        <span class="df-stage">
+                            {% if record.previous_stage %}{{ record.get_previous_stage_display }}{% else %}Start{% endif %}
+                        </span>
+
+                        <span class="text-muted mx-2">
+                            →
+                        </span>
+
+                        <span class="df-stage df-stage-{{ record.stage|lower }}">
+                            {{ record.get_stage_display }}
+                        </span>
+
+                    </div>
+
+                    <p class="text-muted mb-1">
+                        <strong>Progress:</strong>
+                        {{ record.progress_percentage }}%
+                    </p>
+
+                    {% if record.comment %}
+                    <p class="text-muted mb-1">
+                        <strong>Comment:</strong>
+                        {{ record.comment }}
+                    </p>
+                    {% endif %}
+
+                    <p class="text-muted mb-1">
+                        <strong>Changed by:</strong>
+                        {{ record.updated_by.username|default:"Not recorded" }}
+                    </p>
+
+                    <p class="text-muted mb-0">
+                        <strong>Date:</strong>
+                        {{ record.created_at }}
+                    </p>
+
+                </div>
+            </div>
+
+        {% empty %}
+
+            <div class="alert alert-info">
+                No status changes have been recorded.
+            </div>
+
+        {% endfor %}
+
+        <a
+            class="btn btn-outline-secondary"
+            href="{% url 'workflow_list' %}"
+        >
+            Back to Cases
+        </a>
+
+    </div>
 </div>
-
-</body>
-</html>
+{% endblock %}

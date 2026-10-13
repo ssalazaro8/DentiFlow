@@ -1,33 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <title>Create Workflow</title>
-</head>
+{% block title %}Create Workflow - DentiFlow{% endblock %}
 
-<body>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <i class="fas fa-stream me-2"></i>Create Dental Case Workflow
+            </div>
+            <div class="card-body">
+                <form method="post" class="df-plain-form">
 
-    <h1>Create Dental Case Workflow</h1>
+                    {% csrf_token %}
 
-    <form method="post">
+                    {{ form.as_p }}
 
-        {% csrf_token %}
+                    <a class="btn btn-outline-secondary" href="{% url 'workflow_list' %}">
+                        Back to Workflow List
+                    </a>
 
-        {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">
+                        Create Workflow
+                    </button>
 
-        <button type="submit">
-            Create Workflow
-        </button>
-
-    </form>
-
-    <br>
-
-    <a href="{% url 'workflow_list' %}">
-        Back to Workflow List
-    </a>
-
-</body>
-</html>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
