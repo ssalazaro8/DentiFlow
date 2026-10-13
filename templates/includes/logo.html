@@ -1,0 +1,22 @@
+{% comment %}
+DentiFlow mark: a tooth outline drawn as a progress bar.
+Parameters: size, track (colour of the full outline) and progress (colour of the advanced part).
+{% endcomment %}
+<svg width="{{ size|default:32 }}" height="{{ size|default:32 }}" viewBox="0 0 120 120" aria-hidden="true">
+    <path
+        d="M 60 12 C 36 12, 22 28, 22 50 C 22 66, 27 78, 31 90 C 33 97, 36 101, 41 101 C 47 101, 49 93, 51 82 C 52 74, 55 70, 60 70 C 65 70, 68 74, 69 82 C 71 93, 73 101, 79 101 C 84 101, 87 97, 89 90 C 93 78, 98 66, 98 50 C 98 28, 84 12, 60 12 Z"
+        fill="none"
+        stroke="{{ track|default:'#D3DCE4' }}"
+        stroke-width="11"
+        stroke-linecap="round"
+    />
+    <path
+        d="M 60 12 C 36 12, 22 28, 22 50 C 22 66, 27 78, 31 90 C 33 97, 36 101, 41 101 C 47 101, 49 93, 51 82 C 52 74, 55 70, 60 70 C 65 70, 68 74, 69 82 C 71 93, 73 101, 79 101 C 84 101, 87 97, 89 90 C 93 78, 98 66, 98 50 C 98 28, 84 12, 60 12 Z"
+        fill="none"
+        stroke="{{ progress|default:'#2A9D8F' }}"
+        stroke-width="11"
+        stroke-linecap="round"
+        pathLength="100"
+        stroke-dasharray="63 100"
+    />
+</svg>
