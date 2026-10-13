@@ -1,69 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Inventory</title>
-    <style>
-        .low-stock { background-color: #fff3cd; font-weight: bold; }
-        .alert-box { border: 1px solid #f0ad4e; background-color: #fff8e5; padding: 10px 15px; margin-bottom: 15px; }
-        .alert-box h2 { margin-top: 0; font-size: 1.1em; }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Laboratory Inventory</h1>
+{% block title %}Inventory - DentiFlow{% endblock %}
 
-    {% if active_alerts %}
-        <div class="alert-box">
-            <h2>Low stock alerts ({{ active_alerts|length }})</h2>
-            <ul>
-                {% for alert in active_alerts %}
-                    <li>
-                        <strong>{{ alert.material.name }}</strong>:
-                        {{ alert.material.stock_quantity }} {{ alert.material.get_unit_type_display }} left
-                        (minimum {{ alert.material.reorder_level }}) -
-                        alert opened {{ alert.opened_at|date:"M d, Y H:i" }}
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-cubes me-2"></i>Laboratory Inventory</h1>
+</div>
 
-    {% if materials %}
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>Material</th>
-                    <th>Stock</th>
-                    <th>Unit</th>
-                    <th>Reorder Level</th>
-                    <th>Action</th>
+{% if active_alerts %}
+<div class="alert alert-warning" role="alert">
+    <h2 class="h6 mb-2">
+        <i class="fas fa-triangle-exclamation me-2"></i>Low stock alerts ({{ active_alerts|length }})
+    </h2>
+    <ul class="mb-0">
+        {% for alert in active_alerts %}
+            <li>
+                <strong>{{ alert.material.name }}</strong>:
+                {{ alert.material.stock_quantity }} {{ alert.material.get_unit_type_display }} left
+                (minimum {{ alert.material.reorder_level }}) -
+                alert opened {{ alert.opened_at|date:"M d, Y H:i" }}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if materials %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Material</th>
+                <th>Stock</th>
+                <th>Unit</th>
+                <th>Reorder Level</th>
+                <th class="text-end">Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for material in materials %}
+                <tr{% if material.id in alerted_ids %} class="table-warning"{% endif %}>
+                    <td>
+                        <strong>{{ material.name }}</strong>
+                        {% if material.id in alerted_ids %}<span class="badge bg-warning text-dark ms-2">Low stock</span>{% endif %}
+                    </td>
+                    <td>{{ material.stock_quantity }}</td>
+                    <td>{{ material.get_unit_type_display }}</td>
+                    <td>{{ material.reorder_level }}</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'material_update_stock' material.id %}">
+                            <i class="fas fa-pen me-1"></i>Update Stock
+                        </a>
+                    </td>
                 </tr>
-            </thead>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-            <tbody>
-                {% for material in materials %}
-                    <tr{% if material.id in alerted_ids %} class="low-stock"{% endif %}>
-                        <td>
-                            {{ material.name }}
-                            {% if material.id in alerted_ids %}<span>(Low stock)</span>{% endif %}
-                        </td>
-                        <td>{{ material.stock_quantity }}</td>
-                        <td>{{ material.get_unit_type_display }}</td>
-                        <td>{{ material.reorder_level }}</td>
-                        <td>
-                            <a href="{% url 'material_update_stock' material.id %}">
-                                Update Stock
-                            </a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-    {% else %}
-        <p>No materials registered.</p>
-    {% endif %}
-
-</body>
-</html>
+{% else %}
+<div class="alert alert-info">No materials registered.</div>
+{% endif %}
+{% endblock %}

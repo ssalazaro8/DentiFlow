@@ -424,3 +424,12 @@ main.container {
         margin-top: 0;
     }
 }
+
+.form-control,
+.form-select {
+    background-color: #FFFFFF;
+}
+
+.alert h2 > i {
+    color: inherit;
+}

@@ -1,48 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Update Stock</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Update Stock</h1>
+{% block title %}Update Stock - DentiFlow{% endblock %}
 
-    <h2>{{ material.name }}</h2>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <i class="fas fa-cubes me-2"></i>Update Stock
+            </div>
+            <div class="card-body">
 
-    <p>
-        Current stock:
-        {{ material.stock_quantity }}
-        {{ material.get_unit_type_display }}
-    </p>
+                <h2 class="h4 mb-1">{{ material.name }}</h2>
 
-    <form method="post">
-        {% csrf_token %}
+                <p class="text-muted">
+                    Current stock:
+                    {{ material.stock_quantity }}
+                    {{ material.get_unit_type_display }}
+                </p>
 
-        <label for="stock_quantity">
-            New stock quantity:
-        </label>
+                <form method="post">
+                    {% csrf_token %}
 
-        <input
-            type="number"
-            id="stock_quantity"
-            name="stock_quantity"
-            value="{{ material.stock_quantity }}"
-            step="0.01"
-            min="0"
-            required
-        >
+                    <label class="form-label" for="stock_quantity">
+                        New stock quantity:
+                    </label>
 
-        <button type="submit">
-            Update Stock
-        </button>
-    </form>
+                    <input
+                        class="form-control mb-3"
+                        type="number"
+                        id="stock_quantity"
+                        name="stock_quantity"
+                        value="{{ material.stock_quantity }}"
+                        step="0.01"
+                        min="0"
+                        required
+                    >
 
-    <br>
+                    <a class="btn btn-outline-secondary" href="{% url 'material_list' %}">
+                        Back to Inventory
+                    </a>
 
-    <a href="{% url 'material_list' %}">
-        Back to Inventory
-    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Update Stock
+                    </button>
+                </form>
 
-</body>
-</html>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
