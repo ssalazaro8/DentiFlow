@@ -3,10 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>Inventory</title>
+    <style>
+        .low-stock { background-color: #fff3cd; font-weight: bold; }
+        .alert-box { border: 1px solid #f0ad4e; background-color: #fff8e5; padding: 10px 15px; margin-bottom: 15px; }
+        .alert-box h2 { margin-top: 0; font-size: 1.1em; }
+    </style>
 </head>
 <body>
 
     <h1>Laboratory Inventory</h1>
+
+    {% if active_alerts %}
+        <div class="alert-box">
+            <h2>Low stock alerts ({{ active_alerts|length }})</h2>
+            <ul>
+                {% for alert in active_alerts %}
+                    <li>
+                        <strong>{{ alert.material.name }}</strong>:
+                        {{ alert.material.stock_quantity }} {{ alert.material.get_unit_type_display }} left
+                        (minimum {{ alert.material.reorder_level }}) -
+                        alert opened {{ alert.opened_at|date:"M d, Y H:i" }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
 
     {% if materials %}
         <table border="1">
@@ -22,8 +43,11 @@
 
             <tbody>
                 {% for material in materials %}
-                    <tr>
-                        <td>{{ material.name }}</td>
+                    <tr{% if material.id in alerted_ids %} class="low-stock"{% endif %}>
+                        <td>
+                            {{ material.name }}
+                            {% if material.id in alerted_ids %}<span>(Low stock)</span>{% endif %}
+                        </td>
                         <td>{{ material.stock_quantity }}</td>
                         <td>{{ material.get_unit_type_display }}</td>
                         <td>{{ material.reorder_level }}</td>
