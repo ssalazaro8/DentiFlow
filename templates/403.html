@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 
+{% block title %}Access denied - DentiFlow{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
 
-    <h2>Acceso denegado</h2>
+    <h2><i class="fas fa-lock me-2"></i>Access denied</h2>
 
     <p>
         {% if exception %}
             {{ exception }}
         {% else %}
-            No tienes permiso para acceder a este recurso.
+            You do not have permission to access this resource.
         {% endif %}
     </p>
 
-    <a href="/cases/">Volver a los casos</a>
+    <a class="btn btn-outline-primary" href="{% url 'dental_case_list' %}">Back to cases</a>
 
 </div>
 {% endblock %}

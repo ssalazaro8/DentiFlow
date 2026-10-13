@@ -1,0 +1,435 @@
+/*
+ * DentiFlow - brand identity.
+ *
+ * One stylesheet for the whole system. It maps Bootstrap to the brand
+ * palette through variables, so every screen that already uses
+ * Bootstrap classes picks up the colours without touching its HTML.
+ *
+ * Palette: deep blue #1B4965, teal #2A9D8F, amber #E9A23B,
+ * background #F4F6F9, ink #1A1A1A.
+ */
+
+:root {
+    --df-blue: #1B4965;
+    --df-blue-dark: #153A51;
+    --df-teal: #2A9D8F;
+    --df-teal-dark: #23867A;
+    --df-teal-light: #5FD9C8;
+    --df-amber: #E9A23B;
+    --df-amber-dark: #D9912B;
+    --df-bg: #F4F6F9;
+    --df-ink: #1A1A1A;
+    --df-muted: #5A6672;
+    --df-line: #D3DCE4;
+
+    --bs-primary: var(--df-teal);
+    --bs-primary-rgb: 42, 157, 143;
+    --bs-warning: var(--df-amber);
+    --bs-warning-rgb: 233, 162, 59;
+    --bs-info: var(--df-blue);
+    --bs-info-rgb: 27, 73, 101;
+    --bs-dark: var(--df-blue);
+    --bs-dark-rgb: 27, 73, 101;
+
+    --bs-heading-color: var(--df-blue);
+    --bs-body-bg: var(--df-bg);
+    --bs-body-color: var(--df-ink);
+    --bs-secondary-color: var(--df-muted);
+    --bs-border-color: var(--df-line);
+    --bs-link-color: var(--df-blue);
+    --bs-link-color-rgb: 27, 73, 101;
+    --bs-link-hover-color: var(--df-teal-dark);
+    --bs-link-hover-color-rgb: 35, 134, 122;
+}
+
+body {
+    background-color: var(--df-bg);
+    color: var(--df-ink);
+    font-family: "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5 {
+    color: var(--df-blue);
+}
+
+h1 > i,
+h2 > i,
+h3 > i {
+    color: var(--df-teal);
+}
+
+.text-muted {
+    color: var(--df-muted) !important;
+}
+
+.text-primary {
+    color: var(--df-teal-dark) !important;
+}
+
+main {
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 70px);
+}
+
+main.container {
+    max-width: 1200px;
+}
+
+/* ---------- Navigation bar ---------- */
+
+.df-navbar {
+    background-color: var(--df-blue);
+    box-shadow: 0 2px 8px rgba(21, 58, 81, 0.25);
+}
+
+.df-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    color: #FFFFFF !important;
+    text-decoration: none;
+}
+
+.df-brand .df-flow {
+    color: var(--df-teal-light);
+}
+
+.df-navbar .nav-link {
+    color: #D5E2EA;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.45rem 0.7rem;
+    margin: 0 2px;
+    border-radius: 6px;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.df-navbar .nav-link:hover,
+.df-navbar .nav-link:focus {
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.df-navbar .nav-link.active,
+.df-navbar .nav-link.show {
+    color: #FFFFFF;
+    background-color: rgba(95, 217, 200, 0.18);
+}
+
+.df-navbar .nav-link.active i {
+    color: var(--df-teal-light);
+}
+
+.df-navbar .dropdown-menu {
+    border: 1px solid var(--df-line);
+    box-shadow: 0 4px 12px rgba(21, 58, 81, 0.15);
+    background-color: #FFFFFF;
+}
+
+.df-navbar .dropdown-item {
+    color: var(--df-ink);
+}
+
+.df-navbar .dropdown-item i {
+    color: var(--df-teal);
+}
+
+.df-navbar .dropdown-item:hover,
+.df-navbar .dropdown-item:focus {
+    background-color: var(--df-bg);
+    color: var(--df-blue);
+}
+
+.df-navbar .user-info {
+    display: inline-block;
+    color: #D5E2EA;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding: 0.45rem 0;
+}
+
+.df-navbar .user-info strong {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.df-navbar .btn-logout {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #FFFFFF;
+    margin-top: 0.3rem;
+}
+
+.df-navbar .btn-logout:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn-primary {
+    --bs-btn-bg: var(--df-teal);
+    --bs-btn-border-color: var(--df-teal);
+    --bs-btn-hover-bg: var(--df-teal-dark);
+    --bs-btn-hover-border-color: var(--df-teal-dark);
+    --bs-btn-active-bg: var(--df-teal-dark);
+    --bs-btn-active-border-color: var(--df-teal-dark);
+    --bs-btn-disabled-bg: var(--df-teal);
+    --bs-btn-disabled-border-color: var(--df-teal);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--df-teal-dark);
+    --bs-btn-border-color: var(--df-teal);
+    --bs-btn-hover-bg: var(--df-teal);
+    --bs-btn-hover-border-color: var(--df-teal);
+    --bs-btn-active-bg: var(--df-teal-dark);
+    --bs-btn-active-border-color: var(--df-teal-dark);
+}
+
+.btn-info,
+.btn-dark {
+    --bs-btn-color: #FFFFFF;
+    --bs-btn-bg: var(--df-blue);
+    --bs-btn-border-color: var(--df-blue);
+    --bs-btn-hover-color: #FFFFFF;
+    --bs-btn-hover-bg: var(--df-blue-dark);
+    --bs-btn-hover-border-color: var(--df-blue-dark);
+    --bs-btn-active-color: #FFFFFF;
+    --bs-btn-active-bg: var(--df-blue-dark);
+    --bs-btn-active-border-color: var(--df-blue-dark);
+}
+
+.btn-warning {
+    --bs-btn-bg: var(--df-amber);
+    --bs-btn-border-color: var(--df-amber);
+    --bs-btn-hover-bg: var(--df-amber-dark);
+    --bs-btn-hover-border-color: var(--df-amber-dark);
+    --bs-btn-active-bg: var(--df-amber-dark);
+    --bs-btn-active-border-color: var(--df-amber-dark);
+}
+
+.btn-outline-warning {
+    --bs-btn-color: #8A560A;
+    --bs-btn-border-color: var(--df-amber);
+    --bs-btn-hover-bg: var(--df-amber);
+    --bs-btn-hover-border-color: var(--df-amber);
+}
+
+/* ---------- Cards, tables and forms ---------- */
+
+.card {
+    --bs-card-bg: #FFFFFF;
+    border-color: var(--df-line);
+    border-radius: 10px;
+}
+
+.card-header {
+    border-bottom-color: var(--df-line);
+}
+
+.card-header:not([class*="bg-"]) {
+    background-color: #FFFFFF;
+    color: var(--df-blue);
+    font-weight: 600;
+}
+
+.list-group {
+    --bs-list-group-bg: #FFFFFF;
+}
+
+.table:not(.table-dark) {
+    --bs-table-bg: #FFFFFF;
+}
+
+.table-dark,
+.table > thead.table-dark > tr > th {
+    --bs-table-bg: var(--df-blue);
+    --bs-table-border-color: var(--df-blue-dark);
+    background-color: var(--df-blue);
+    color: #FFFFFF;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--df-teal);
+    box-shadow: 0 0 0 0.2rem rgba(42, 157, 143, 0.2);
+}
+
+.form-check-input:checked {
+    background-color: var(--df-teal);
+    border-color: var(--df-teal);
+}
+
+.progress {
+    --bs-progress-bar-bg: var(--df-teal);
+}
+
+/* ---------- Text over coloured surfaces ---------- */
+
+.card[class*="bg-"] h1,
+.card[class*="bg-"] h2,
+.card[class*="bg-"] h3,
+.card[class*="bg-"] h4,
+.card[class*="bg-"] h5,
+.card-header[class*="bg-"] h1,
+.card-header[class*="bg-"] h2,
+.card-header[class*="bg-"] h3,
+.card-header[class*="bg-"] h4,
+.card-header[class*="bg-"] h5,
+.text-white h1,
+.text-white h2,
+.text-white h3,
+.text-white h4,
+.text-white h5 {
+    color: inherit;
+}
+
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    padding: 0.4em 0.7em;
+}
+
+.badge.bg-primary {
+    background-color: var(--df-teal) !important;
+}
+
+.bg-info.text-dark,
+.badge.bg-info,
+.badge.bg-dark {
+    color: #FFFFFF !important;
+}
+
+/* ---------- Production stages ---------- */
+
+.df-stage {
+    display: inline-block;
+    padding: 0.3em 0.8em;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background-color: #E4EAF0;
+    color: var(--df-blue);
+    white-space: nowrap;
+}
+
+.df-stage-received { background-color: #E4EAF0; color: #46535F; }
+.df-stage-design   { background-color: #D6E6EF; color: var(--df-blue); }
+.df-stage-printing { background-color: #FBECD2; color: #8A560A; }
+.df-stage-qc       { background-color: #D3EEEA; color: #1B6C62; }
+.df-stage-shipped  { background-color: var(--df-blue); color: #FFFFFF; }
+
+/* ---------- Case tracking ---------- */
+
+.tracking-hero {
+    background: linear-gradient(135deg, var(--df-blue), var(--df-teal));
+    color: #FFFFFF;
+    border-radius: 18px;
+    padding: 2rem;
+}
+
+.tracking-hero h1 {
+    color: #FFFFFF;
+}
+
+.tracking-step {
+    position: relative;
+    padding-left: 2.7rem;
+    padding-bottom: 1.7rem;
+}
+
+.tracking-step::before {
+    content: "";
+    position: absolute;
+    left: 0.65rem;
+    top: 1.35rem;
+    height: calc(100% - 0.4rem);
+    border-left: 2px solid var(--df-line);
+}
+
+.tracking-step:last-child::before {
+    display: none;
+}
+
+.tracking-dot {
+    position: absolute;
+    left: 0;
+    top: 0.15rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: var(--df-line);
+    border: 4px solid #FFFFFF;
+    box-shadow: 0 0 0 2px var(--df-line);
+}
+
+.tracking-step.active .tracking-dot {
+    background: var(--df-teal);
+    box-shadow: 0 0 0 2px var(--df-teal);
+}
+
+/* ---------- Sign in ---------- */
+
+.df-login .df-flow {
+    color: var(--df-teal);
+}
+
+.df-login-form input {
+    display: block;
+    width: 100%;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--df-line);
+    border-radius: 6px;
+}
+
+.df-login-form input:focus {
+    outline: none;
+    border-color: var(--df-teal);
+    box-shadow: 0 0 0 0.2rem rgba(42, 157, 143, 0.2);
+}
+
+/* ---------- Forms rendered with form.as_p ---------- */
+
+.df-plain-form p label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.df-plain-form p input:not([type="checkbox"]):not([type="radio"]),
+.df-plain-form p select,
+.df-plain-form p textarea {
+    display: block;
+    width: 100%;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--df-line);
+    border-radius: 6px;
+    background-color: #FFFFFF;
+}
+
+.tracking-hero .progress {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+@media (min-width: 992px) {
+    .df-navbar .navbar-nav {
+        align-items: center;
+    }
+
+    .df-navbar .btn-logout {
+        margin-top: 0;
+    }
+}
+
+.form-control,
+.form-select {
+    background-color: #FFFFFF;
+}
+
+.alert h2 > i {
+    color: inherit;
+}
