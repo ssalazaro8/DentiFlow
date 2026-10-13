@@ -1,4 +1,4 @@
-from .models import Material, MaterialConsumption
+from .models import Material, MaterialConsumption, StockAlert
 
 
 class MaterialSelector:
@@ -19,4 +19,14 @@ class MaterialConsumptionSelector:
             MaterialConsumption.objects
             .filter(dental_case=dental_case)
             .select_related("material", "registered_by")
+        )
+
+class StockAlertSelector:
+
+    @staticmethod
+    def open_alerts():
+        return (
+            StockAlert.objects
+            .filter(status=StockAlert.Status.OPEN)
+            .select_related("material")
         )

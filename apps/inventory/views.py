@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from .selectors import StockAlertSelector
 
 from apps.dental_cases.models import DentalCase
 
@@ -14,11 +15,17 @@ def material_list(request):
 
     materials = MaterialService.get_all()
 
+    # FR-28: alertas abiertas y materiales a resaltar en la lista.
+    active_alerts = StockAlertSelector.open_alerts()
+    alerted_ids = {alert.material_id for alert in active_alerts}
+
     return render(
         request,
         "inventory/list.html",
         {
-            "materials": materials
+            "materials": materials,
+            "active_alerts": active_alerts,
+            "alerted_ids": alerted_ids,
         }
     )
 
