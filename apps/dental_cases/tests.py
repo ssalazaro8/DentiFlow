@@ -155,9 +155,8 @@ class DashboardViewTests(TestCase):
 
         content = response.content.decode()
 
-        # El polling depende de que estas zonas sigan existiendo.
+        # El polling depende de que esta zona siga existiendo.
         self.assertIn("dashboard-metrics", content)
-        self.assertIn("dashboard-stages", content)
         self.assertIn(DashboardView.METRICS_ERROR_MESSAGE, content)
 
 

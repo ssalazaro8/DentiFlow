@@ -1,34 +1,45 @@
 {% extends "base.html" %}
 
+{% block title %}Clinics - DentiFlow{% endblock %}
+
 {% block content %}
-<h1>Dental Clinics</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-hospital me-2"></i>Dental Clinics</h1>
+    <a href="{% url 'clinic_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New Clinic
+    </a>
+</div>
 
-<a href="{% url 'clinic_create' %}" class="button">+ New Clinic</a>
-
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>NIT</th>
-      <th>Email</th>
-      <th>Phone</th>
-      <th>City</th>
-      <th>Cases</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for clinic in clinics %}
-    <tr>
-      <td>{{ clinic.name }}</td>
-      <td>{{ clinic.nit }}</td>
-      <td>{{ clinic.email }}</td>
-      <td>{{ clinic.phone }}</td>
-      <td>{{ clinic.city }}</td>
-      <td><a href="{% url 'clinic_case_inbox' clinic.id %}" class="button">View cases</a></td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="6">No clinics registered yet.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>NIT</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th class="text-end">Cases</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for clinic in clinics %}
+            <tr>
+                <td><strong>{{ clinic.name }}</strong></td>
+                <td>{{ clinic.nit }}</td>
+                <td>{{ clinic.email }}</td>
+                <td>{{ clinic.phone }}</td>
+                <td>{{ clinic.city }}</td>
+                <td class="text-end">
+                    <a href="{% url 'clinic_case_inbox' clinic.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-inbox me-1"></i>View cases
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted py-4">No clinics registered yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
