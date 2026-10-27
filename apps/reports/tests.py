@@ -485,9 +485,9 @@ class LaboratoryScopeTests(TestCase):
         self.assertEqual(metricas["total"], 2)
         self.assertEqual(metricas["completed"], 1)
 
-    def test_user_without_laboratory_sees_nothing(self):
+    def test_user_without_laboratory_cannot_open_the_reports(self):
         """
-        Sin laboratorio asignado el reporte va vacio, no completo.
+        Sin rol en un laboratorio no se entra a los reportes (FR-16).
         """
 
         huerfano = User.objects.create_user(
@@ -498,10 +498,7 @@ class LaboratoryScopeTests(TestCase):
 
         response = self.client.get(self.url)
 
-        self.assertFalse(response.context["production"]["has_data"])
-        self.assertEqual(
-            response.context["production"]["metrics"]["total"], 0
-        )
+        self.assertEqual(response.status_code, 403)
 
     def test_superuser_sees_every_laboratory(self):
         """

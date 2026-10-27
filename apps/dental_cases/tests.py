@@ -105,6 +105,17 @@ class DashboardViewTests(TestCase):
             password="clave-de-prueba",
         )
 
+        # FR-16: the dashboard belongs to the laboratory administrator.
+        self.laboratory = Laboratory.objects.create(
+            name="Lab Dashboard",
+            email="dashboard@lab.com",
+            phone="1",
+            city="Medellin",
+            address="Calle 1",
+            service="CROWN",
+        )
+        self.laboratory.authorized_users.add(self.user)
+
     def test_dashboard_requires_login(self):
         """
         Un usuario anonimo es redirigido al login.
@@ -122,7 +133,14 @@ class DashboardViewTests(TestCase):
 
         self.client.force_login(self.user)
 
-        build_case("CASE-001", DentalCase.Status.IN_PROGRESS)
+        build_case(
+            "CASE-001",
+            DentalCase.Status.IN_PROGRESS,
+            laboratory=self.laboratory,
+        )
+
+        # A case of another laboratory is not counted.
+        build_case("CASE-002", DentalCase.Status.IN_PROGRESS)
 
         response = self.client.get(self.url)
 
@@ -158,6 +176,18 @@ class DashboardViewTests(TestCase):
         # El polling depende de que esta zona siga existiendo.
         self.assertIn("dashboard-metrics", content)
         self.assertIn(DashboardView.METRICS_ERROR_MESSAGE, content)
+
+
+    def test_dashboard_is_only_for_the_laboratory_administrator(self):
+        """
+        Quien no administra un laboratorio no ve el dashboard.
+        """
+
+        other = User.objects.create_user("sin_laboratorio", password="clave")
+
+        self.client.force_login(other)
+
+        self.assertEqual(self.client.get(self.url).status_code, 403)
 
 
 class LaboratoryDecisionAndAssignmentTests(TestCase):
