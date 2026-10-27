@@ -4,7 +4,12 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.dental_cases.models import DentalCase
-from apps.dental_cases.permissions import require_case_access
+from apps.dental_cases.permissions import (
+    can_update_production,
+    require_case_access,
+    require_case_management,
+    require_production_update,
+)
 from apps.laboratories.models import Laboratory
 from apps.laboratories.permissions import require_laboratory_access
 from apps.dental_cases.services import DentalCaseService
@@ -24,6 +29,11 @@ def workflow_list(request):
     else:
         workflows = WorkflowService.get_all()
 
+    # Only the workflows of the cases the user may see.
+    workflows = workflows.filter(
+        dental_case__in=DentalCaseService.get_visible_cases(request.user)
+    )
+
     return render(
         request,
         "workflow/list.html",
@@ -35,11 +45,15 @@ def workflow_list(request):
 
 def workflow_create(request):
 
+    visible_cases = DentalCaseService.get_visible_cases(request.user)
+
     if request.method == "POST":
         form = WorkflowForm(request.POST)
+        form.fields["dental_case"].queryset = visible_cases
 
         if form.is_valid():
             dental_case = form.cleaned_data["dental_case"]
+            require_case_management(request.user, dental_case)
             try:
                 WorkflowService.create(form.cleaned_data)
             except ValueError as error:
@@ -50,6 +64,7 @@ def workflow_create(request):
 
     else:
         form = WorkflowForm()
+        form.fields["dental_case"].queryset = visible_cases
 
     return render(
         request,
@@ -63,6 +78,8 @@ def workflow_create(request):
 def workflow_update_stage(request, id):
 
     workflow = WorkflowService.get_by_id(id)
+
+    require_production_update(request.user, workflow.dental_case)
 
     form = WorkflowUpdateForm(request.POST or None, initial={
         "current_stage": workflow.current_stage,
@@ -96,12 +113,22 @@ def workflow_update_stage(request, id):
 
 def case_tracking(request, case_id):
     dental_case = get_object_or_404(DentalCase, pk=case_id)
+    require_case_access(request.user, dental_case)
     workflow = getattr(dental_case, "workflow", None)
-    return render(request, "workflow/tracking.html", {"dental_case": dental_case, "workflow": workflow})
+    return render(
+        request,
+        "workflow/tracking.html",
+        {
+            "dental_case": dental_case,
+            "workflow": workflow,
+            "can_update_production": can_update_production(request.user, dental_case),
+        },
+    )
 
 
 def start_production(request, case_id):
     dental_case = get_object_or_404(DentalCase, pk=case_id)
+    require_case_management(request.user, dental_case)
     if request.method == "POST":
         try:
             DentalCaseService.start_production(dental_case)

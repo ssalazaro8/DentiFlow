@@ -17,12 +17,14 @@
 
     </div>
 
+    {% if user_can.create_cases %}
     <a
         href="{% url 'dental_case_create' %}"
         class="btn btn-primary"
     >
         + New Case
     </a>
+    {% endif %}
 
 </div>
 
@@ -342,12 +344,14 @@
             Start by creating the first dental work order.
         </p>
 
+        {% if user_can.create_cases %}
         <a
             href="{% url 'dental_case_create' %}"
             class="btn btn-primary"
         >
             Create Dental Case
         </a>
+        {% endif %}
 
         {% endif %}
 

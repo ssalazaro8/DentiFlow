@@ -5,9 +5,11 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="fas fa-hospital me-2"></i>Dental Clinics</h1>
+    {% if user_can.manage_users %}
     <a href="{% url 'clinic_create' %}" class="btn btn-primary">
         <i class="fas fa-plus me-1"></i>New Clinic
     </a>
+    {% endif %}
 </div>
 
 <div class="table-responsive">

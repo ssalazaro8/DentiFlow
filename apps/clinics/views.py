@@ -1,5 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from .forms import ClinicForm
+from .models import Clinic
 from .services import ClinicService
 
 
@@ -31,11 +32,18 @@ def clinic_create(request):
     )
 
 from django.contrib.auth.decorators import login_required
+from apps.accounts.permissions import require_clinic_access
 from apps.dental_cases.services import DentalCaseService
 
 @login_required
 def clinic_detail(request, clinic_id):
     """Clinic detail page showing their cases."""
     clinic = get_object_or_404(Clinic, pk=clinic_id)
-    cases = DentalCaseService.get_all().filter(clinic=clinic).order_by('-created_at')
+    # FR-16: only the cases the user may see, never the whole clinic.
+    require_clinic_access(request.user, clinic)
+    cases = (
+        DentalCaseService.get_visible_cases(request.user)
+        .filter(clinic=clinic)
+        .order_by('-created_at')
+    )
     return render(request, "clinics/detail.html", {"clinic": clinic, "cases": cases})

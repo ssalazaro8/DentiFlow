@@ -99,9 +99,10 @@ class DentalCaseSelector:
         return cases
 
     @staticmethod
-    def get_dashboard_metrics():
+    def get_dashboard_metrics(cases=None):
 
-        base_qs = DentalCase.objects.all()
+        # FR-16: the indicators count only the cases the user can see.
+        base_qs = DentalCase.objects.all() if cases is None else cases
         
         pending_cases = base_qs.filter(
             status__in=[DentalCase.Status.SUBMITTED, DentalCase.Status.IN_REVIEW]

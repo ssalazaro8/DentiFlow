@@ -40,7 +40,7 @@ class DentalCaseService:
     }
 
     @staticmethod
-    def get_dashboard_metrics():
+    def get_dashboard_metrics(cases=None):
         """
         Returns the production indicators of the laboratory.
 
@@ -51,7 +51,7 @@ class DentalCaseService:
 
         try:
 
-            return DentalCaseSelector.get_dashboard_metrics()
+            return DentalCaseSelector.get_dashboard_metrics(cases)
 
         except Exception as error:
 

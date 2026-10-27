@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from apps.laboratories.models import Laboratory
+from apps.accounts.permissions import Operation, get_laboratories
 
 from .exceptions import ReportGenerationError
 from .forms import ReportFilterForm
@@ -17,15 +17,17 @@ def get_allowed_laboratories(user):
     Returns the laboratories whose cases the user may see in a report.
 
     Superusers get None, meaning no restriction. Everyone else is
-    limited to the laboratories they are authorised for, so a user
-    with no laboratory sees an empty report instead of somebody
-    else's production data.
+    limited to the laboratories where their role allows reports, so
+    nobody sees somebody else's production data.
     """
 
     if user.is_superuser:
         return None
 
-    return Laboratory.objects.filter(authorized_users=user)
+    return get_laboratories(
+        user,
+        Operation.VIEW_REPORTS,
+    )
 
 
 class OperationalReportsView(LoginRequiredMixin, TemplateView):

@@ -21,15 +21,18 @@ from .forms import (
     RejectionForm,
     TechnicianAssignmentForm,
 )
+from .permissions import (
+    can_manage_case,
+    can_modify_case,
+    require_case_management,
+)
 from .selectors import get_case_file_by_id
 from .services import DentalCaseService
 
 
 def _require_laboratory_access(request, dental_case):
-    """Allows the laboratory's authorised users (or superusers) to act."""
-    laboratory = dental_case.laboratory
-    if not laboratory:
-        raise PermissionDenied("You are not authorized to manage this laboratory case.")
+    """Allows whoever manages cases in the destination laboratory to act."""
+    require_case_management(request.user, dental_case)
 
 
 def _can_view_case(user, dental_case):
@@ -145,13 +148,13 @@ def dental_case_detail(request, case_id):
             "dental_case_list"
         )
 
+    require_case_access(request.user, dental_case)
+
     case_files = dental_case.files.all()
     assignment = getattr(dental_case, "technician_assignment", None)
     workflow = getattr(dental_case, "workflow", None)
     delivery = getattr(dental_case, "delivery_registration", None)
-    # Temporary demo mode: roles are not implemented yet, so the selected
-    # laboratory can operate the case through its own inbox.
-    can_manage_laboratory = dental_case.laboratory is not None
+    can_manage_laboratory = can_manage_case(request.user, dental_case)
 
     timeline = []
     if workflow:
@@ -180,9 +183,9 @@ def laboratory_case_inbox(request, laboratory_id):
 
 
 def clinic_case_inbox(request, clinic_id):
-    """Temporary clinic-side inbox until identity and roles are enabled."""
+    """Cases requested by one clinic, among those the user may see."""
     clinic = get_object_or_404(Clinic, pk=clinic_id)
-    dental_cases = DentalCaseService.get_all().filter(clinic=clinic)
+    dental_cases = DentalCaseService.get_visible_cases(request.user).filter(clinic=clinic)
     return _render_case_list(request, dental_cases, clinic=clinic)
 
 
@@ -206,7 +209,7 @@ def dental_case_edit(request, case_id):
             "dental_case_list"
         )
 
-    if not _can_view_case(request.user, dental_case):
+    if not can_modify_case(request.user, dental_case):
         raise PermissionDenied("You are not authorized to edit this dental case.")
 
     if request.method == "POST":
@@ -284,7 +287,7 @@ def dental_case_delete(request, case_id):
             "dental_case_list"
         )
 
-    if not _can_view_case(request.user, dental_case):
+    if not can_modify_case(request.user, dental_case):
         raise PermissionDenied("You are not authorized to delete this dental case.")
 
     if request.method == "POST":
@@ -402,7 +405,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         try:
 
-            metrics = DentalCaseService.get_dashboard_metrics()
+            metrics = DentalCaseService.get_dashboard_metrics(
+                DentalCaseService.get_visible_cases(self.request.user)
+            )
 
         except DashboardMetricsError:
 

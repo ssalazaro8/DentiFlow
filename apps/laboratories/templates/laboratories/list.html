@@ -37,14 +37,22 @@
                 <td>⭐ {{ lab.rating }}</td>
                 <td><span class="badge bg-success">Active</span></td>
                 <td>
+                    {% if user.is_superuser or lab.id == user_laboratory_id and user_can.view_cases %}
                     <a href="{% url 'laboratory_case_inbox' lab.id %}" class="btn btn-sm btn-info">
                         <i class="fas fa-inbox me-1"></i>View
                     </a>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
                 </td>
                 <td>
+                    {% if user.is_superuser or lab.id == user_laboratory_id and user_can.manage_users %}
                     <a href="{% url 'technician_create' lab.id %}" class="btn btn-sm btn-success">
                         <i class="fas fa-plus me-1"></i>Add Tech
                     </a>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
