@@ -1,228 +1,134 @@
-# 🦷 DentiFlow
+# DentiFlow
 
-> A web platform that connects dental laboratories, dental clinics, and independent dentists through a centralized ecosystem for work order management, communication, and service discovery.
+*Cada caso, de principio a fin.*
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
-![Django](https://img.shields.io/badge/Django-5.2-success?logo=django)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5-purple?logo=bootstrap)
-![SQLite](https://img.shields.io/badge/Database-SQLite-blue)
-![License](https://img.shields.io/badge/License-Academic-lightgrey)
+DentiFlow is a web platform for managing dental laboratory cases. It follows
+a case from the moment a clinic registers it until the laboratory delivers
+it, keeping a record of every production stage along the way.
 
----
+Academic project for the Software Engineering course at Universidad EAFIT.
 
-# 📖 Overview
+## Why
 
-DentiFlow is a web application designed to improve communication and workflow between dental laboratories, dental clinics, and independent dentists.
+A dental laboratory works with several clinics at the same time. Every case
+(a crown, a bridge, an implant) arrives with its information, its files and
+a due date, and goes through several production stages before it returns to
+the clinic.
 
-The platform centralizes the complete lifecycle of a dental work order, from its creation to its final delivery, while also providing a marketplace where clinics and dentists can discover laboratories and specialists based on ratings, specialties, experience, and service quality.
+That coordination usually happens over chat, email and spreadsheets, so
+nobody knows for certain where a case stands: the clinic calls to ask, the
+laboratory checks its folders, and delays are found late.
 
----
+DentiFlow brings that flow into one place. Clinics register their cases with
+the attached files, the laboratory accepts them and assigns a technician, and
+each case moves through stages that are recorded with the person responsible
+and the date.
 
-# ✨ Main Features
-
-- 🔐 User authentication and authorization
-- 👨‍⚕️ Dental clinics management
-- 🦷 Independent dentists management
-- 🏭 Dental laboratories management
-- 📦 Work order lifecycle tracking
-- 📄 File upload (Images, PDFs, STL files)
-- 💬 Internal chat between participants
-- ⭐ Ratings and reviews
-- 🔎 Marketplace for laboratories and specialists
-- 📊 Personalized dashboards
-- 🔔 Notifications
-
----
-
-# 🏗️ Architecture
-
-The project follows a **Modular Monolith Architecture** using Django's **Model-View-Template (MVT)** pattern.
+## Project structure
 
 ```
-Dentiflow
+DentiFlow
 │
 ├── apps/
-├── config/
-├── templates/
-├── static/
-├── media/
-├── docs/
+│   ├── accounts/        Authentication
+│   ├── clinics/         Dental clinics
+│   ├── common/          Shared utilities
+│   ├── dental_cases/    Cases, search, filters, delivery and dashboard
+│   ├── documents/       Files attached to a case
+│   ├── inventory/       Materials, consumption and stock alerts
+│   ├── laboratories/    Laboratories, authorized users and technicians
+│   ├── reports/         Operational reports
+│   ├── users/           Laboratory staff
+│   └── workflow/        Production stages, history and timeline
+│
+├── config/              Settings and root URL routing
+├── templates/           Shared templates and layout
+├── static/              Static files (brand stylesheet)
+│
+├── requirements.txt
 └── manage.py
 ```
 
-The application is organized by business domains to promote scalability and maintainability.
+Built with Python, Django 5.2, Bootstrap 5 and SQLite. Each application is
+split in layers: `views.py` for presentation, `services.py` for business
+rules, `selectors.py` for queries and `models.py` for data.
 
----
+## How to run it
 
-# 🛠️ Technology Stack
+Requires Python 3.11 or later.
 
-| Layer | Technology |
-|--------|------------|
-| Language | Python 3.11 |
-| Backend | Django 5 |
-| Frontend | HTML5 + Bootstrap 5 |
-| Templates | Django Templates |
-| Database | SQLite (Development) |
-| Version Control | Git & GitHub |
-| Methodology | Scrum |
-| Architecture | Modular Monolith (MVT) |
-
----
-
-# 📂 Project Structure
-
-```
-Dentiflow
-│
-├── apps/
-│
-├── config/
-│
-├── docs/
-│
-├── media/
-│
-├── static/
-│   ├── css/
-│   ├── img/
-│   ├── js/
-│   └── uploads/
-│
-├── templates/
-│
-├── requirements.txt
-├── manage.py
-└── README.md
-```
-
----
-
-# ⚙️ Installation
-
-## 1. Clone the repository
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-organization/dentiflow.git
-
-cd Dentiflow
+git clone https://github.com/ssalazaro8/DentiFlow.git
+cd DentiFlow
 ```
 
----
+### 2. Create and activate a virtual environment
 
-## 2. Create a virtual environment
-
-```bash
-python -m venv .venv
-```
-
----
-
-## 3. Activate the virtual environment
-
-### Windows
+On Windows:
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-### Linux / macOS
+On Linux or macOS:
 
 ```bash
+python -m venv .venv
 source .venv/bin/activate
 ```
 
----
-
-## 4. Install dependencies
+### 3. Install the dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 5. Apply migrations
+### 4. Apply the migrations
 
 ```bash
 python manage.py migrate
 ```
 
----
+Run this step again after every update of the repository.
 
-## 6. Create an administrator
+### 5. Create an administrator
 
 ```bash
 python manage.py createsuperuser
 ```
 
----
+The command asks for a username, an email (optional) and a password.
 
-## 7. Run the project
+### 6. Run the server
 
 ```bash
 python manage.py runserver
 ```
 
-Open:
+The application is available at `http://127.0.0.1:8000`. To use another
+port, pass it as a parameter, for example `python manage.py runserver 8080`.
 
-```
-http://127.0.0.1:8000
-```
+On Windows, if `python` is not recognised, use `py` in its place.
 
----
+### 7. First steps
 
-# 👥 Team
+1. Sign in at `/accounts/login/` with the administrator.
+2. Open `/admin/` and register a laboratory, a clinic and the inventory
+   materials. Add your user to the laboratory's authorized users and
+   technicians.
+3. Create a case from **Cases > Create Case** and follow it through
+   acceptance, technician assignment, production and delivery.
 
-| Name | 
-|------|
-| Samuel Salazar Ospina | 
-| Daniel Villegas | 
-| Santiago Meneses | 
-| Juan Fernando Duque | 
+## Team
 
----
+| Member |
+|---|
+| Samuel Salazar Ospina |
+| Santiago Meneses |
+| Juan Fernando Duque |
 
-# 🚀 Development Workflow
-
-The team follows Git Flow using feature branches.
-
-```
-main
-
-↓
-
-develop
-
-↓
-
-feature/accounts
-
-feature/orders
-
-feature/chat
-
-feature/marketplace
-```
-
-Every new feature must be developed in an independent branch and merged through Pull Requests.
-
----
-
-
-# 📚 Documentation
-
-Project documentation can be found in the **docs/** directory.
-
-- Software Requirements Specification (SRS)
-- Architecture
-- UML Diagrams
-- Entity Relationship Diagram (ERD)
-- Sprint Documentation
-
----
-
-# 📄 License
-
-This project was developed for academic purposes as part of the Software Engineering course at Universidad EAFIT.
-
-Future commercial use may require additional licensing and legal considerations.
+Diagrams, requirements and sprint deliverables are in the
+[project wiki](https://github.com/ssalazaro8/DentiFlow/wiki).
