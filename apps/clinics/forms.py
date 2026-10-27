@@ -8,4 +8,5 @@ class ClinicForm(forms.ModelForm):
 
         model = Clinic
 
-        fields = "__all__"
+        # The clinic's accounts are linked from the administration site.
+        exclude = ["users"]
