@@ -13,7 +13,7 @@
     {% with path=request.path %}
     <nav class="navbar navbar-expand-lg navbar-dark df-navbar">
         <div class="container-fluid">
-            <a class="navbar-brand df-brand" href="{% url 'dashboard' %}">
+            <a class="navbar-brand df-brand" href="{% url 'home' %}">
                 {% include "includes/logo.html" with size=30 track="#3E6E88" progress="#5FD9C8" %}
                 <span>Denti<span class="df-flow">Flow</span></span>
             </a>
@@ -25,51 +25,27 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 {% if user.is_authenticated %}
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link{% if path == '/cases/dashboard/' %} active{% endif %}" href="{% url 'dashboard' %}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                        </a>
-                    </li>
-
+                    {# FR-16: each role only sees the screens it can open. #}
+                    {% for item in menu %}
+                    {% if item.children %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle{% if path|slice:':7' == '/cases/' and path != '/cases/dashboard/' %} active{% endif %}" href="#" id="casesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-file-medical me-1"></i>Cases
+                        <a class="nav-link dropdown-toggle{% if item.active %} active{% endif %}" href="#" id="menu{{ forloop.counter }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas {{ item.icon }} me-1"></i>{{ item.label }}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="casesDropdown">
-                            <li><a class="dropdown-item" href="{% url 'dental_case_list' %}"><i class="fas fa-list me-2"></i>List Cases</a></li>
-                            <li><a class="dropdown-item" href="{% url 'dental_case_create' %}"><i class="fas fa-plus me-2"></i>Create Case</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menu{{ forloop.counter }}">
+                            {% for child in item.children %}
+                            <li><a class="dropdown-item" href="{{ child.url }}"><i class="fas {{ child.icon }} me-2"></i>{{ child.label }}</a></li>
+                            {% endfor %}
                         </ul>
                     </li>
-
+                    {% else %}
                     <li class="nav-item">
-                        <a class="nav-link{% if path|slice:':9' == '/clinics/' %} active{% endif %}" href="{% url 'clinic_list' %}">
-                            <i class="fas fa-hospital me-1"></i>Clinics
+                        <a class="nav-link{% if item.active %} active{% endif %}" href="{{ item.url }}">
+                            <i class="fas {{ item.icon }} me-1"></i>{{ item.label }}
                         </a>
                     </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link{% if path|slice:':14' == '/laboratories/' %} active{% endif %}" href="{% url 'laboratory_list' %}">
-                            <i class="fas fa-flask me-1"></i>Labs
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link{% if path|slice:':10' == '/workflow/' %} active{% endif %}" href="{% url 'workflow_list' %}">
-                            <i class="fas fa-stream me-1"></i>Workflow
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link{% if path|slice:':11' == '/inventory/' %} active{% endif %}" href="{% url 'material_list' %}">
-                            <i class="fas fa-cubes me-1"></i>Inventory
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link{% if path|slice:':9' == '/reports/' %} active{% endif %}" href="{% url 'operational_reports' %}">
-                            <i class="fas fa-chart-bar me-1"></i>Reports
-                        </a>
-                    </li>
+                    {% endif %}
+                    {% endfor %}
 
                     {% if user.is_superuser %}
                     <li class="nav-item dropdown">
@@ -90,8 +66,8 @@
                         <span class="user-info ms-3 me-3">
                             <i class="fas fa-user-circle me-1"></i>
                             <strong>{{ user.get_full_name|default:user.username }}</strong>
-                            {% if user.groups.all|first %}
-                                <small class="d-block">({{ user.groups.all|first }})</small>
+                            {% if user_role %}
+                                <small class="d-block">{{ user_role }}</small>
                             {% endif %}
                         </span>
                     </li>
