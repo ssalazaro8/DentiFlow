@@ -20,7 +20,6 @@ SCREEN_OPERATIONS = {
     "dashboard": Operation.VIEW_REPORTS,
     "dental_case_create": Operation.CREATE_CASES,
     "laboratory_case_inbox": Operation.VIEW_CASES,
-    "laboratory_detail": Operation.VIEW_CASES,
     "clinic_list": Operation.VIEW_CASES,
     "clinic_create": Operation.MANAGE_USERS,
     "workflow_list": Operation.VIEW_CASES,
@@ -41,6 +40,9 @@ SCREEN_OPERATIONS = {
 # Who may see an entry: an operation, the clinic role, or everybody.
 EVERYBODY = "everybody"
 CLINIC_ONLY = "clinic"
+# Clinics and accounts without a role: their case list is "List Cases",
+# while the laboratory roles work from their laboratory's inbox.
+OUTSIDE_LABORATORY = "outside_laboratory"
 
 # label, icon, screen, who may see it, address argument, active prefix
 # The address argument is "laboratory" or "clinic" when the screen
@@ -49,7 +51,7 @@ MENU = [
     ("Dashboard", "fa-tachometer-alt", "dashboard", Operation.VIEW_REPORTS, None, "/cases/dashboard/"),
     (
         "Cases", "fa-file-medical", [
-            ("List Cases", "fa-list", "dental_case_list", EVERYBODY, None),
+            ("List Cases", "fa-list", "dental_case_list", OUTSIDE_LABORATORY, None),
             ("Create Case", "fa-plus", "dental_case_create", Operation.CREATE_CASES, None),
             ("Laboratory Inbox", "fa-inbox", "laboratory_case_inbox", Operation.VIEW_CASES, "laboratory"),
         ],
@@ -100,6 +102,9 @@ def _allowed(user, who, laboratory, clinic):
 
     if who == CLINIC_ONLY:
         return clinic is not None and get_home(user)[1] == Role.CLINIC
+
+    if who == OUTSIDE_LABORATORY:
+        return user.is_superuser or not can(user, Operation.VIEW_CASES)
 
     return can(user, who)
 

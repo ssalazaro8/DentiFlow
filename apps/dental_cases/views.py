@@ -169,6 +169,7 @@ def dental_case_detail(request, case_id):
             "assignment": assignment,
             "workflow": workflow,
             "can_manage_laboratory": can_manage_laboratory,
+            "can_modify_case": can_modify_case(request.user, dental_case),
             "timeline": timeline,
             "delivery": delivery,
         },

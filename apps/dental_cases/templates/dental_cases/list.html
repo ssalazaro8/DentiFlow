@@ -288,12 +288,14 @@
                                 View
                             </a>
 
+                            {% if user_can.manage_cases or case.created_by_id == user.id %}
                             <a
                                 href="{% url 'dental_case_edit' case.id %}"
                                 class="btn btn-sm btn-outline-warning"
                             >
                                 Edit
                             </a>
+                            {% endif %}
 
                         </td>
 

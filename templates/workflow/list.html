@@ -58,9 +58,11 @@
                 </p>
                 {% endif %}
 
+                {% if user_can.update_production %}
                 <a class="btn btn-sm btn-outline-primary" href="{% url 'workflow_update_stage' workflow.id %}">
                     <i class="fas fa-pen me-1"></i>Update Status
                 </a>
+                {% endif %}
 
             </div>
         </div>

@@ -93,8 +93,12 @@ def technician_create(request, laboratory_id):
 def laboratory_detail(request, laboratory_id):
     """Laboratory detail page showing their assigned cases."""
     laboratory = get_object_or_404(Laboratory, pk=laboratory_id)
-    # Show only cases assigned to this laboratory
-    cases = DentalCaseService.get_all().filter(laboratory=laboratory).order_by('-created_at')
+    # FR-16: only the cases of this laboratory that the user can see.
+    cases = (
+        DentalCaseService.get_visible_cases(request.user)
+        .filter(laboratory=laboratory)
+        .order_by('-created_at')
+    )
     return render(
         request,
         "laboratories/detail.html",

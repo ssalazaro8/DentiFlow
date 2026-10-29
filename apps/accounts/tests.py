@@ -726,17 +726,17 @@ class MenuTests(TestCase):
 
         esperado = {
             "admin": {
-                "Dashboard", "Cases", "List Cases", "Create Case",
+                "Dashboard", "Cases", "Create Case",
                 "Laboratory Inbox", "Clinics", "Labs", "Workflow",
                 "Inventory", "Reports", "Laboratory", "Workflow Stages",
                 "Register User",
             },
             "recepcion": {
-                "Cases", "List Cases", "Create Case", "Laboratory Inbox",
+                "Cases", "Create Case", "Laboratory Inbox",
                 "Clinics", "Labs", "Workflow",
             },
             "tecnico": {
-                "Cases", "List Cases", "Laboratory Inbox", "Clinics",
+                "Cases", "Laboratory Inbox", "Clinics",
                 "Labs", "Workflow", "Inventory",
             },
             "clinica": {
@@ -940,10 +940,69 @@ class ClinicRoleTests(TestCase):
             reverse("dashboard"),
             reverse("clinic_list"),
             reverse("workflow_list"),
-            reverse("laboratory_detail", args=[self.laboratory.id]),
         ):
             with self.subTest(url=url):
                 self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_laboratory_page_lists_only_the_cases_the_user_can_see(self):
+
+        self.client.force_login(self.clinica)
+
+        response = self.client.get(
+            reverse("laboratory_detail", args=[self.laboratory.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [case.case_number for case in response.context["cases"]],
+            ["C-001"],
+        )
+
+
+class HiddenButtonsTests(TestCase):
+    """
+    Cada rol solo ve los botones de lo que puede hacer.
+    """
+
+    def setUp(self):
+
+        self.laboratory = build_laboratory("Lab Propio", "propio@test.com")
+
+        self.recepcion = build_member(
+            "recepcion", self.laboratory, Role.RECEPTIONIST
+        )
+        self.tecnico = build_member(
+            "tecnico", self.laboratory, Role.TECHNICIAN
+        )
+
+        self.case = build_case("C-001", laboratory=self.laboratory)
+
+    def test_technician_does_not_see_edit_or_delete(self):
+
+        self.client.force_login(self.tecnico)
+
+        detail = self.client.get(
+            reverse("dental_case_detail", args=[self.case.id])
+        ).content.decode()
+
+        self.assertNotIn(reverse("dental_case_edit", args=[self.case.id]), detail)
+        self.assertNotIn(reverse("dental_case_delete", args=[self.case.id]), detail)
+
+    def test_receptionist_sees_edit_but_not_the_production_update(self):
+
+        DentalCaseService.accept(self.case)
+        DentalCaseService.assign_technician(self.case, self.tecnico)
+
+        self.client.force_login(self.recepcion)
+        self.client.post(reverse("start_production", args=[self.case.id]))
+
+        detail = self.client.get(
+            reverse("dental_case_detail", args=[self.case.id])
+        ).content.decode()
+        workflow = self.client.get(reverse("workflow_list")).content.decode()
+
+        self.assertIn(reverse("dental_case_edit", args=[self.case.id]), detail)
+        self.assertNotIn("Update Status", workflow)
 
 
 class CaseCreationTests(TestCase):

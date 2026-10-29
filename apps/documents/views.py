@@ -200,7 +200,7 @@ def case_file_download(
         dental_case=dental_case,
     )
 
-    if not case_file.file:
+    if not case_file.file or not case_file.file.storage.exists(case_file.file.name):
 
         raise Http404(
             "The requested file does not exist."
