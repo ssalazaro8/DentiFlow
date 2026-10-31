@@ -1,4 +1,4 @@
-{% load static %}
+{% load static notification_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,6 +87,9 @@
                     {% endif %}
 
                     <li class="nav-item">
+                        <li class="nav-item">
+                        {% notification_bell %}
+                        </li>
                         <span class="user-info ms-3 me-3">
                             <i class="fas fa-user-circle me-1"></i>
                             <strong>{{ user.get_full_name|default:user.username }}</strong>

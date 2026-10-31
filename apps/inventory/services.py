@@ -2,12 +2,13 @@ from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 from apps.dental_cases.models import DentalCase
+from apps.notifications.services import NotificationService
 from .models import Material, MaterialConsumption, StockAlert
 from .selectors import MaterialSelector
 
 
 class StockAlertService:
-    """FR-28: abre y cierra las alertas de stock minimo."""
+    """Abre y cierra las alertas de stock minimo."""
 
     @staticmethod
     def sync(material):
@@ -24,7 +25,7 @@ class StockAlertService:
         current = Material.objects.get(pk=material.pk)
 
         if current.stock_quantity <= current.reorder_level:
-            alert, _ = StockAlert.objects.get_or_create(
+            alert, created = StockAlert.objects.get_or_create(
                 material=current,
                 status=StockAlert.Status.OPEN,
                 defaults={
@@ -32,6 +33,12 @@ class StockAlertService:
                     "reorder_level_when_opened": current.reorder_level,
                 },
             )
+
+            # FR-12: solo una alerta NUEVA genera avisos, no la que ya
+            # estaba abierta.
+            if created:
+                NotificationService.notify_stock_alert(alert)
+
             return alert
 
         StockAlert.objects.filter(
@@ -59,13 +66,14 @@ class MaterialService:
         material.stock_quantity = stock_quantity
         material.save()
 
-        # FR-28: todo movimiento de inventario revisa el stock minimo.
+        # Todo movimiento de inventario revisa el stock minimo.
         StockAlertService.sync(material)
 
         return material
 
+
 class MaterialConsumptionService:
-    """FR-13: registra consumos de material y los descuenta del stock."""
+    """Registra consumos de material y los descuenta del stock."""
 
     @staticmethod
     def register(*, dental_case, material, quantity, user):
@@ -91,7 +99,7 @@ class MaterialConsumptionService:
             locked.stock_quantity -= quantity
             locked.save(update_fields=["stock_quantity"])
 
-            # FR-28: el consumo tambien revisa el stock minimo.
+            # El consumo tambien revisa el stock minimo.
             StockAlertService.sync(locked)
 
             return MaterialConsumption.objects.create(
