@@ -36,6 +36,10 @@ urlpatterns = [
 
     # Laboratory users
     path("users/", include("apps.users.urls")),
+
+    # Notifications
+        # Notifications
+    path("notifications/", include("apps.notifications.urls")),
 ]
 
 if settings.DEBUG:
