@@ -16,3 +16,18 @@ def can_register_consumption(user, dental_case):
 
     assignment = getattr(dental_case, "technician_assignment", None)
     return assignment is not None and assignment.technician_id == user.id
+
+
+def can_view_consumption_report(user):
+    """
+    Quien puede revisar el consumo de materiales: superusuarios y
+    usuarios autorizados de algun laboratorio (el gerente del laboratorio).
+    """
+
+    if not user.is_authenticated:
+        return False
+
+    if user.is_superuser:
+        return True
+
+    return user.authorized_laboratories.exists()

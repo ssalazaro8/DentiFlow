@@ -21,4 +21,10 @@ urlpatterns = [
         views.register_material_consumption,
         name="register_material_consumption"
     ),
+
+    path(
+        "consumption-report/",
+        views.consumption_report,
+        name="consumption_report"
+    ),
 ]
