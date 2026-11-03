@@ -1,0 +1,49 @@
+{% extends "dental_cases/base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Technicians · {{ laboratory.name }}</h1>
+    <p class="text-muted mb-0">Cases assigned to each technician and their production progress.</p>
+  </div>
+  <a class="btn btn-outline-secondary" href="{% url 'laboratory_case_inbox' laboratory.id %}">Back to inbox</a>
+</div>
+
+{% for row in workload %}
+<div class="card shadow-sm mb-3 {% if row.idle %}border-success{% elif row.busiest %}border-warning{% endif %}">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>{{ row.technician.get_full_name|default:row.technician.username }}</strong>
+    <span>
+      <span class="badge bg-secondary me-1">{{ row.active }} active</span>
+      <span class="badge bg-light text-dark me-1">{{ row.completed_30d }} completed (30 days)</span>
+      {% if row.idle %}<span class="badge bg-success">No active cases</span>{% elif row.busiest %}<span class="badge bg-warning text-dark">Highest workload</span>{% endif %}
+    </span>
+  </div>
+  <div class="card-body p-0">
+    {% if row.cases %}
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Case</th><th>Status</th><th>Stage</th><th style="width: 25%;">Progress</th></tr></thead>
+      <tbody>
+        {% for item in row.cases %}
+        <tr>
+          <td><strong>{{ item.case.case_number }}</strong></td>
+          <td>{{ item.case.get_status_display }}</td>
+          <td>{{ item.stage }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress flex-grow-1" style="height: 8px;"><div class="progress-bar" style="width: {{ item.progress }}%;"></div></div>
+              <small>{{ item.progress }}%</small>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted p-3 mb-0">No cases assigned.</p>
+    {% endif %}
+  </div>
+</div>
+{% empty %}
+<div class="alert alert-info">This laboratory has no technicians yet.</div>
+{% endfor %}
+{% endblock %}

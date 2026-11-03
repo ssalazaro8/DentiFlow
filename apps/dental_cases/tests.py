@@ -11,7 +11,7 @@ from django.utils import timezone
 from apps.laboratories.models import Laboratory
 
 from .exceptions import DashboardMetricsError
-from .models import DentalCase
+from .models import DentalCase, TechnicianAssignment
 from .permissions import can_access_case
 from .services import DentalCaseService
 from .views import DashboardView
@@ -584,3 +584,35 @@ class CaseFilterTests(TestCase):
         response = self.client.get(url, {"status": "COMPLETED"})
 
         self.assertEqual(listed_numbers(response), ["F-003"])
+
+
+class TechnicianWorkloadTests(TestCase):
+    def test_workload_counts_active_and_recently_completed_cases(self):
+        laboratory = Laboratory.objects.create(
+            name="Workload Lab", email="workload@example.com", phone="1", city="Medellin",
+            address="Street 1", service="CROWN",
+        )
+        busy = get_user_model().objects.create_user("busy-tech", password="test")
+        idle = get_user_model().objects.create_user("idle-tech", password="test")
+        laboratory.technicians.add(busy, idle)
+
+        def make_case(number, status):
+            case = DentalCase.objects.create(
+                case_number=number, clinic_name="Clinic", requested_by="Dr. Test",
+                laboratory=laboratory, service_type="CROWN", description="Case",
+                due_date=date.today(), acceptance_status=DentalCase.AcceptanceStatus.ACCEPTED,
+                status=status,
+            )
+            TechnicianAssignment.objects.create(dental_case=case, technician=busy)
+            return case
+
+        make_case("DF-200", DentalCase.Status.IN_PROGRESS)
+        make_case("DF-201", DentalCase.Status.DELIVERED)
+        rows = {row["technician"]: row for row in DentalCaseService.get_technician_workload(laboratory)}
+
+        self.assertEqual(rows[busy]["active"], 1)
+        self.assertEqual(rows[busy]["completed_30d"], 1)
+        self.assertTrue(rows[busy]["busiest"])
+        self.assertEqual({item["case"].case_number for item in rows[busy]["cases"]}, {"DF-200", "DF-201"})
+        self.assertTrue(rows[idle]["idle"])
+        self.assertEqual(rows[idle]["active"], 0)
