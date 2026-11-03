@@ -40,6 +40,9 @@
                     <a href="{% url 'laboratory_case_inbox' lab.id %}" class="btn btn-sm btn-info">
                         <i class="fas fa-inbox me-1"></i>View
                     </a>
+                    <a href="{% url 'laboratory_technicians' lab.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-user-tie me-1"></i>Technicians
+                    </a>
                 </td>
                 <td>
                     <a href="{% url 'technician_create' lab.id %}" class="btn btn-sm btn-success">

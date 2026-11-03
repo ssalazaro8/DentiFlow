@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from .models import Workflow, WorkflowStage, WorkflowUpdate
 from django.db.models import Prefetch
 from django.utils import timezone
@@ -81,6 +83,40 @@ class WorkflowUpdateSelector:
         ).select_related('updated_by').order_by('created_at')
 
         return updates
+
+    @staticmethod
+    def get_average_stage_durations(service_type="", date_from=None, date_to=None):
+        """
+        FR-37: promedio de permanencia por etapa. Cada permanencia va desde un
+        cambio de etapa hasta el siguiente del mismo caso y se cuenta si su
+        entrada cae dentro del rango de fechas.
+        """
+        updates = list(
+            WorkflowUpdate.objects.select_related("workflow__dental_case")
+            .order_by("workflow_id", "created_at")
+        )
+        if service_type:
+            updates = [u for u in updates if u.workflow.dental_case.service_type == service_type]
+
+        durations = {}
+        for current, following in zip(updates, updates[1:]):
+            if current.workflow_id != following.workflow_id:
+                continue
+            day = timezone.localdate(current.created_at)
+            if (date_from and day < date_from) or (date_to and day > date_to):
+                continue
+            durations.setdefault(current.stage, []).append(following.created_at - current.created_at)
+
+        return [
+            {
+                "stage": code,
+                "label": label,
+                "average": sum(durations[code], timedelta()) / len(durations[code]),
+                "cases": len(durations[code]),
+            }
+            for code, label in Workflow.STAGE_CHOICES
+            if code in durations
+        ]
 
     @staticmethod
     def get_timeline_with_elapsed_time(workflow):
