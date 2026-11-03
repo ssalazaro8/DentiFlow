@@ -16,6 +16,13 @@ urlpatterns = [
         name="dental_case_list",
     ),
 
+    # FR-34: calendario de entregas
+    path(
+        "calendar/",
+        views.delivery_calendar,
+        name="delivery_calendar",
+    ),
+
     path(
         "create/",
         views.dental_case_create,

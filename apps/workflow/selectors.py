@@ -85,16 +85,19 @@ class WorkflowUpdateSelector:
         return updates
 
     @staticmethod
-    def get_average_stage_durations(service_type="", date_from=None, date_to=None):
+    def get_average_stage_durations(service_type="", date_from=None, date_to=None, laboratories=None):
         """
         FR-37: promedio de permanencia por etapa. Cada permanencia va desde un
         cambio de etapa hasta el siguiente del mismo caso y se cuenta si su
         entrada cae dentro del rango de fechas.
         """
-        updates = list(
-            WorkflowUpdate.objects.select_related("workflow__dental_case")
-            .order_by("workflow_id", "created_at")
-        )
+        updates = WorkflowUpdate.objects.select_related("workflow__dental_case")
+
+        # FR-16: None means every laboratory (superusers).
+        if laboratories is not None:
+            updates = updates.filter(workflow__dental_case__laboratory__in=laboratories)
+
+        updates = list(updates.order_by("workflow_id", "created_at"))
         if service_type:
             updates = [u for u in updates if u.workflow.dental_case.service_type == service_type]
 

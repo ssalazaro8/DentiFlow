@@ -53,29 +53,6 @@
         </div>
         {% endif %}
     </div>
-
-    <!-- ESTE ID TAMBIÉN -->
-    <div class="row" id="dashboard-stages">
-        {% if not metrics_error %}
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    Cases by Status
-                </div>
-                <ul class="list-group list-group-flush">
-                    {% for stage in cases_by_stage %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ stage.label }}
-                        <span class="badge bg-primary rounded-pill">{{ stage.total }}</span>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item text-muted">No hay casos registrados.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endif %}
-    </div>
 </div>
 
 <!-- Script de Polling -->
@@ -109,16 +86,14 @@
                     const doc = parser.parseFromString(html, 'text/html');
 
                     const newMetrics = doc.getElementById('dashboard-metrics');
-                    const newStages = doc.getElementById('dashboard-stages');
 
-                    // Si la respuesta no trae las zonas esperadas (por ejemplo,
+                    // Si la respuesta no trae la zona esperada (por ejemplo,
                     // una redirección al login), no se pisa lo que ya se ve.
-                    if (!newMetrics || !newStages) {
+                    if (!newMetrics) {
                         throw new Error('Respuesta inesperada del servidor');
                     }
 
                     document.getElementById('dashboard-metrics').innerHTML = newMetrics.innerHTML;
-                    document.getElementById('dashboard-stages').innerHTML = newStages.innerHTML;
 
                     hideConnectionError();
                 })

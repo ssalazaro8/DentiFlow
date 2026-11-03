@@ -99,9 +99,10 @@ class DentalCaseSelector:
         return cases
 
     @staticmethod
-    def get_dashboard_metrics():
+    def get_dashboard_metrics(cases=None):
 
-        base_qs = DentalCase.objects.all()
+        # FR-16: the indicators count only the cases the user can see.
+        base_qs = DentalCase.objects.all() if cases is None else cases
         
         pending_cases = base_qs.filter(
             status__in=[DentalCase.Status.SUBMITTED, DentalCase.Status.IN_REVIEW]
@@ -134,6 +135,24 @@ class DentalCaseSelector:
             'total_active': pending_cases + in_progress_cases,
             'cases_by_stage': cases_by_stage
         }
+
+    @staticmethod
+    def get_due_between(cases, first_day, last_day):
+        """
+        FR-34: returns the cases due between two days, leaving out the
+        ones that will never be delivered (cancelled or rejected).
+        """
+
+        return (
+            cases.filter(due_date__range=(first_day, last_day))
+            .exclude(
+                status__in=[
+                    DentalCase.Status.CANCELLED,
+                    DentalCase.Status.REJECTED,
+                ]
+            )
+            .order_by("due_date", "case_number")
+        )
 
 
 # --- FR-24: acceso a los archivos adjuntos del caso ---

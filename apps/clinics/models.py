@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -42,6 +43,15 @@ class Clinic(models.Model):
 
     updated_at = models.DateTimeField(
         auto_now=True
+    )
+
+    # FR-16: the accounts of the people who work at the clinic. They
+    # send the clinic's cases and follow only those.
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="clinics",
+        verbose_name="Users",
     )
 
     class Meta:

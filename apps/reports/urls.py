@@ -12,6 +12,12 @@ urlpatterns = [
     ),
 
     path(
+        "analytics/",
+        views.LaboratoryAnalyticsView.as_view(),
+        name="laboratory_analytics",
+    ),
+
+    path(
         "download/<str:report_type>/",
         views.download_report_view,
         name="download_report",

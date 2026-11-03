@@ -239,3 +239,43 @@ class StageAnalyticsTests(TestCase):
         self.assertEqual(stages["RECEIVED"]["average"], timedelta(hours=2))
         self.assertEqual(stages["DESIGN"]["average"], timedelta(hours=3))
         self.assertNotIn("QC", stages)
+
+
+class StageAnalyticsScopeTests(TestCase):
+    """
+    FR-16: the stage analytics only measure the given laboratories.
+    """
+
+    def test_only_counts_the_given_laboratories(self):
+
+        def case_with_two_changes(number, laboratory):
+            dental_case = DentalCase.objects.create(
+                case_number=number, clinic_name="Clinic", requested_by="Dr. Test",
+                laboratory=laboratory, service_type="CROWN", description="Case",
+                due_date=date.today(), acceptance_status=DentalCase.AcceptanceStatus.ACCEPTED,
+            )
+            workflow = WorkflowService.create(
+                {"dental_case": dental_case, "current_stage": "RECEIVED", "comments": "", "progress_percentage": 0}
+            )
+            WorkflowService.update_stage(workflow, "DESIGN", 25, "", None)
+
+        own = Laboratory.objects.create(
+            name="Own Lab", email="own@example.com", phone="1", city="Medellin",
+            address="Street 1", service="CROWN",
+        )
+        other = Laboratory.objects.create(
+            name="Other Lab", email="other@example.com", phone="1", city="Medellin",
+            address="Street 2", service="CROWN",
+        )
+
+        case_with_two_changes("DF-400", own)
+        case_with_two_changes("DF-401", other)
+
+        def counted(laboratories):
+            return {
+                row["stage"]: row["cases"]
+                for row in WorkflowUpdateSelector.get_average_stage_durations(laboratories=laboratories)
+            }
+
+        self.assertEqual(counted([own]), {"RECEIVED": 1})
+        self.assertEqual(counted(None), {"RECEIVED": 2})

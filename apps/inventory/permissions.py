@@ -1,17 +1,20 @@
+from apps.accounts.permissions import Operation, can, can_in, is_blocked
+
+
 def can_register_consumption(user, dental_case):
     """
     FR-13: quien puede registrar materiales de un caso.
-    Superusuarios, tecnicos del laboratorio destino y el tecnico asignado.
+    Superusuarios, quien registra la produccion en el laboratorio
+    destino (FR-16) y el tecnico asignado.
     """
 
-    if not user.is_authenticated:
+    if not user.is_authenticated or is_blocked(user):
         return False
 
     if user.is_superuser:
         return True
 
-    laboratory = dental_case.laboratory
-    if laboratory is not None and laboratory.technicians.filter(pk=user.pk).exists():
+    if can_in(user, Operation.UPDATE_PRODUCTION, dental_case.laboratory):
         return True
 
     assignment = getattr(dental_case, "technician_assignment", None)
@@ -21,13 +24,7 @@ def can_register_consumption(user, dental_case):
 def can_view_consumption_report(user):
     """
     Quien puede revisar el consumo de materiales: superusuarios y
-    usuarios autorizados de algun laboratorio (el gerente del laboratorio).
+    el administrador del laboratorio, que es quien ve los reportes (FR-16).
     """
 
-    if not user.is_authenticated:
-        return False
-
-    if user.is_superuser:
-        return True
-
-    return user.authorized_laboratories.exists()
+    return can(user, Operation.VIEW_REPORTS)

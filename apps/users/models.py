@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 
@@ -14,6 +15,27 @@ class LaboratoryUser(models.Model):
         ("ACTIVE", "Active"),
         ("INACTIVE", "Inactive"),
     ]
+
+    # FR-16: the account this person logs in with and the laboratory
+    # they work for. Together with the role and the status below, this
+    # is what the system checks before a protected operation.
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="laboratory_profile",
+        verbose_name="Account",
+    )
+
+    laboratory = models.ForeignKey(
+        "laboratories.Laboratory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="members",
+        verbose_name="Laboratory",
+    )
 
     first_name = models.CharField(
         max_length=100,

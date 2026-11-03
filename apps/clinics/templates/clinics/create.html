@@ -1,11 +1,23 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>Register New Clinic</h1>
+{% block title %}New Clinic - DentiFlow{% endblock %}
 
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Save</button>
-</form>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <i class="fas fa-hospital me-2"></i>Register New Clinic
+            </div>
+            <div class="card-body">
+                <form method="post" class="df-plain-form">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <a class="btn btn-outline-secondary" href="{% url 'clinic_list' %}">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

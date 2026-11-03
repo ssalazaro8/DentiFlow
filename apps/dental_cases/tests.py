@@ -1,3 +1,4 @@
+import io
 from datetime import date, timedelta
 from unittest.mock import patch
 
@@ -13,7 +14,7 @@ from apps.laboratories.models import Laboratory
 from .exceptions import DashboardMetricsError
 from .models import DentalCase, TechnicianAssignment
 from .permissions import can_access_case
-from .services import DentalCaseService
+from .services import DeliveryCalendarService, DentalCaseService, parse_month
 from .views import DashboardView
 
 
@@ -105,6 +106,17 @@ class DashboardViewTests(TestCase):
             password="clave-de-prueba",
         )
 
+        # FR-16: the dashboard belongs to the laboratory administrator.
+        self.laboratory = Laboratory.objects.create(
+            name="Lab Dashboard",
+            email="dashboard@lab.com",
+            phone="1",
+            city="Medellin",
+            address="Calle 1",
+            service="CROWN",
+        )
+        self.laboratory.authorized_users.add(self.user)
+
     def test_dashboard_requires_login(self):
         """
         Un usuario anonimo es redirigido al login.
@@ -122,7 +134,14 @@ class DashboardViewTests(TestCase):
 
         self.client.force_login(self.user)
 
-        build_case("CASE-001", DentalCase.Status.IN_PROGRESS)
+        build_case(
+            "CASE-001",
+            DentalCase.Status.IN_PROGRESS,
+            laboratory=self.laboratory,
+        )
+
+        # A case of another laboratory is not counted.
+        build_case("CASE-002", DentalCase.Status.IN_PROGRESS)
 
         response = self.client.get(self.url)
 
@@ -155,10 +174,21 @@ class DashboardViewTests(TestCase):
 
         content = response.content.decode()
 
-        # El polling depende de que estas zonas sigan existiendo.
+        # El polling depende de que esta zona siga existiendo.
         self.assertIn("dashboard-metrics", content)
-        self.assertIn("dashboard-stages", content)
         self.assertIn(DashboardView.METRICS_ERROR_MESSAGE, content)
+
+
+    def test_dashboard_is_only_for_the_laboratory_administrator(self):
+        """
+        Quien no administra un laboratorio no ve el dashboard.
+        """
+
+        other = User.objects.create_user("sin_laboratorio", password="clave")
+
+        self.client.force_login(other)
+
+        self.assertEqual(self.client.get(self.url).status_code, 403)
 
 
 class LaboratoryDecisionAndAssignmentTests(TestCase):
@@ -584,6 +614,167 @@ class CaseFilterTests(TestCase):
         response = self.client.get(url, {"status": "COMPLETED"})
 
         self.assertEqual(listed_numbers(response), ["F-003"])
+
+
+# --- FR-34: calendario de entregas ---
+
+# A Wednesday in the middle of the month.
+HOY = date(2026, 11, 11)
+
+
+def calendar_numbers(context):
+    """
+    Returns the case numbers placed on the calendar, sorted.
+    """
+
+    return sorted(
+        item["case"].case_number
+        for week in context["weeks"]
+        for day in week
+        for item in day["cases"]
+    )
+
+
+class DeliveryCalendarServiceTests(TestCase):
+    """
+    Cada caso queda en su fecha de entrega (FR-34).
+    """
+
+    def build(self, month=None):
+        return DeliveryCalendarService.build(
+            DentalCase.objects.all(), month=month, today=HOY
+        )
+
+    def test_places_each_case_on_its_due_date(self):
+
+        build_case("K-1", DentalCase.Status.IN_PROGRESS, due_date=date(2026, 11, 20))
+
+        calendar = self.build()
+
+        self.assertEqual(calendar["month"], date(2026, 11, 1))
+        # Weeks start on Monday: November 2026 begins on a Sunday.
+        self.assertEqual(calendar["weeks"][0][0]["date"], date(2026, 10, 26))
+
+        dias = {
+            day["date"]: day["cases"] for week in calendar["weeks"] for day in week
+        }
+
+        self.assertEqual(dias[date(2026, 11, 20)][0]["case"].case_number, "K-1")
+        self.assertTrue(
+            any(day["is_today"] for week in calendar["weeks"] for day in week)
+        )
+
+    def test_highlights_overdue_and_delivered_cases(self):
+
+        build_case("K-1", DentalCase.Status.IN_PROGRESS, due_date=date(2026, 11, 5))
+        build_case("K-2", DentalCase.Status.DELIVERED, due_date=date(2026, 11, 6))
+        build_case("K-3", DentalCase.Status.SUBMITTED, due_date=date(2026, 11, 25))
+
+        estados = {
+            item["case"].case_number: item["state"]
+            for week in self.build()["weeks"]
+            for day in week
+            for item in day["cases"]
+        }
+
+        self.assertEqual(
+            estados, {"K-1": "overdue", "K-2": "delivered", "K-3": "upcoming"}
+        )
+        self.assertEqual(
+            self.build()["totals"], {"overdue": 1, "delivered": 1, "upcoming": 1}
+        )
+
+    def test_leaves_out_cancelled_and_rejected_cases(self):
+
+        build_case("K-1", DentalCase.Status.CANCELLED, due_date=date(2026, 11, 20))
+        build_case("K-2", DentalCase.Status.REJECTED, due_date=date(2026, 11, 20))
+
+        self.assertEqual(self.build()["total"], 0)
+
+    def test_moves_between_months(self):
+
+        calendar = self.build(parse_month("2026-12", HOY))
+
+        self.assertEqual(calendar["month"], date(2026, 12, 1))
+        self.assertEqual(calendar["previous_month"], "2026-11")
+        self.assertEqual(calendar["next_month"], "2027-01")
+        self.assertFalse(calendar["is_current_month"])
+
+    def test_invalid_month_shows_the_current_one(self):
+
+        for value in (None, "", "2026", "2026-13", "abc"):
+            with self.subTest(value=value):
+                self.assertEqual(parse_month(value, HOY), date(2026, 11, 1))
+
+
+class DeliveryCalendarViewTests(TestCase):
+    """
+    El calendario solo muestra los casos que el usuario puede ver.
+    """
+
+    def setUp(self):
+
+        self.url = reverse("delivery_calendar")
+        today = timezone.localdate()
+
+        self.propio = build_laboratory("Lab Propio", "propio@test.com")
+        self.ajeno = build_laboratory("Lab Ajeno", "ajeno@test.com")
+
+        self.user = User.objects.create_user("recepcion", password="clave")
+        self.propio.authorized_users.add(self.user)
+
+        build_case("M-1", DentalCase.Status.IN_PROGRESS, laboratory=self.propio, due_date=today)
+        build_case("M-2", DentalCase.Status.IN_PROGRESS, laboratory=self.ajeno, due_date=today)
+
+    def test_shows_only_the_visible_cases(self):
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(calendar_numbers(response.context), ["M-1"])
+
+        case = DentalCase.objects.get(case_number="M-1")
+        self.assertContains(response, reverse("dental_case_detail", args=[case.id]))
+
+    def test_other_month(self):
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.url, {"month": "2020-01"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["month"], date(2020, 1, 1))
+        self.assertContains(response, "There are no cases due")
+
+
+class SeedDemoCommandTests(TestCase):
+    """
+    El comando de datos de demostracion se puede correr sin duplicar.
+    """
+
+    def test_loads_the_demo_data_once(self):
+
+        from django.core.management import CommandError, call_command
+
+        call_command("seed_demo", password="clave-demo", stdout=io.StringIO())
+
+        seeded = DentalCase.objects.filter(case_number__startswith="SEED-")
+
+        self.assertGreater(seeded.count(), 30)
+        self.assertTrue(seeded.filter(status=DentalCase.Status.DELIVERED).exists())
+        self.assertTrue(User.objects.filter(username="demo_admin").exists())
+
+        with self.assertRaises(CommandError):
+            call_command("seed_demo", stdout=io.StringIO())
+
+        call_command("seed_demo", reset=True, stdout=io.StringIO())
+
+        self.assertEqual(
+            DentalCase.objects.filter(case_number__startswith="SEED-").count(),
+            seeded.count(),
+        )
 
 
 class TechnicianWorkloadTests(TestCase):
