@@ -729,7 +729,7 @@ class MenuTests(TestCase):
                 "Dashboard", "Cases", "Create Case",
                 "Laboratory Inbox", "Delivery Calendar", "Clinics", "Labs", "Workflow",
                 "Inventory", "Reports", "Operational Reports",
-                "Laboratory Analytics", "Material Consumption",
+                "Laboratory Analytics", "Material Consumption", "Stage Analytics",
                 "Laboratory", "Workflow Stages", "Register User",
             },
             "recepcion": {
@@ -1043,3 +1043,41 @@ class CaseCreationTests(TestCase):
                     self.client.get(reverse("dental_case_create")).status_code,
                     status,
                 )
+
+
+class SprintFourScreensTests(TestCase):
+    """
+    Las pantallas de FR-37 y FR-29 tambien respetan el rol (FR-16).
+    """
+
+    def setUp(self):
+
+        self.propio = build_laboratory("Lab Propio", "propio@test.com")
+        self.ajeno = build_laboratory("Lab Ajeno", "ajeno@test.com")
+        self.clinic = build_clinic("Clinica Sonrisa", "900111")
+
+        self.admin = build_member("admin_lab", self.propio, Role.ADMIN)
+        self.tecnico = build_member("tecnico", self.propio, Role.TECHNICIAN)
+        self.clinica = build_clinic_user("clinica", self.clinic)
+
+    def status(self, user, url):
+        self.client.force_login(user)
+        return self.client.get(url).status_code
+
+    def test_stage_analytics_only_for_the_administrator(self):
+
+        url = reverse("stage_analytics")
+
+        self.assertEqual(self.status(self.admin, url), 200)
+        self.assertEqual(self.status(self.tecnico, url), 403)
+        self.assertEqual(self.status(self.clinica, url), 403)
+
+    def test_technicians_only_of_the_own_laboratory(self):
+
+        propio = reverse("laboratory_technicians", args=[self.propio.id])
+        ajeno = reverse("laboratory_technicians", args=[self.ajeno.id])
+
+        self.assertEqual(self.status(self.admin, propio), 200)
+        self.assertEqual(self.status(self.tecnico, propio), 200)
+        self.assertEqual(self.status(self.admin, ajeno), 403)
+        self.assertEqual(self.status(self.clinica, propio), 403)

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.accounts.permissions import Operation, get_laboratories
 from apps.dental_cases.models import DentalCase
 from apps.dental_cases.permissions import (
     can_update_production,
@@ -36,7 +37,10 @@ def stage_analytics(request):
     date_from = _parse_date(request.GET.get("date_from"))
     date_to = _parse_date(request.GET.get("date_to"))
 
-    stages = WorkflowUpdateSelector.get_average_stage_durations(service_type, date_from, date_to)
+    # FR-16: each administrator only measures their own laboratory.
+    laboratories = None if request.user.is_superuser else get_laboratories(request.user, Operation.VIEW_REPORTS)
+
+    stages = WorkflowUpdateSelector.get_average_stage_durations(service_type, date_from, date_to, laboratories)
     slowest = max(stages, key=lambda stage: stage["average"], default=None)
     for stage in stages:
         stage["slowest"] = stage is slowest

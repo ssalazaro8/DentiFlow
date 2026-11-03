@@ -30,6 +30,8 @@ SCREEN_OPERATIONS = {
     "download_report": Operation.VIEW_REPORTS,
     "laboratory_analytics": Operation.VIEW_REPORTS,
     "consumption_report": Operation.VIEW_REPORTS,
+    "stage_analytics": Operation.VIEW_REPORTS,
+    "laboratory_technicians": Operation.VIEW_CASES,
     "workflow_stage_list": Operation.CONFIGURE_LABORATORY,
     "workflow_stage_create": Operation.CONFIGURE_LABORATORY,
     "workflow_stage_edit": Operation.CONFIGURE_LABORATORY,
@@ -70,6 +72,7 @@ MENU = [
             ("Operational Reports", "fa-table", "operational_reports", Operation.VIEW_REPORTS, None),
             ("Laboratory Analytics", "fa-chart-line", "laboratory_analytics", Operation.VIEW_REPORTS, None),
             ("Material Consumption", "fa-chart-column", "consumption_report", Operation.VIEW_REPORTS, None),
+            ("Stage Analytics", "fa-hourglass-half", "stage_analytics", Operation.VIEW_REPORTS, None),
         ],
         None, None, "/reports/",
     ),
@@ -96,8 +99,10 @@ def _is_active(label, prefix, path):
     if label == "Cases":
         return path.startswith(prefix) and not path.startswith("/cases/dashboard/")
 
+    analytics = path.startswith("/workflow/analytics/")
+
     if label == "Workflow":
-        return path.startswith(prefix) and not stages
+        return path.startswith(prefix) and not stages and not analytics
 
     consumption = path.startswith("/inventory/consumption-report/")
 
@@ -105,7 +110,7 @@ def _is_active(label, prefix, path):
         return path.startswith(prefix) and not consumption
 
     if label == "Reports":
-        return path.startswith(prefix) or consumption
+        return path.startswith(prefix) or consumption or analytics
 
     if label == "Laboratory":
         return path.startswith(prefix) or stages
