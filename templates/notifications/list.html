@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - DentiFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-bell me-2"></i>Notifications</h1>
+
+    {% if pending %}
+        <form method="post" action="{% url 'notification_mark_all_read' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-check-double me-1"></i>Mark all as read
+            </button>
+        </form>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Pending</h2>
+    </div>
+
+    <ul class="list-group list-group-flush">
+        {% for notification in pending %}
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="fw-semibold">{{ notification.message }}</div>
+                    <small class="text-muted">
+                        {{ notification.created_at|date:"M d, Y H:i" }}
+                        {% if notification.dental_case_id %}
+                            - <a href="{% url 'dental_case_detail' notification.dental_case_id %}">View case</a>
+                        {% elif notification.material_id %}
+                            - <a href="{% url 'material_list' %}">View inventory</a>
+                        {% endif %}
+                    </small>
+                </div>
+
+                <form method="post" action="{% url 'notification_mark_read' notification.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        Mark as read
+                    </button>
+                </form>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">You have no pending notifications.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% if recent_read %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Recently read</h2>
+    </div>
+
+    <ul class="list-group list-group-flush">
+        {% for notification in recent_read %}
+            <li class="list-group-item text-muted">
+                <div>{{ notification.message }}</div>
+                <small>{{ notification.created_at|date:"M d, Y H:i" }}</small>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}

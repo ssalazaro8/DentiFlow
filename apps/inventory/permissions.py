@@ -1,4 +1,4 @@
-from apps.accounts.permissions import Operation, can_in, is_blocked
+from apps.accounts.permissions import Operation, can, can_in, is_blocked
 
 
 def can_register_consumption(user, dental_case):
@@ -19,3 +19,12 @@ def can_register_consumption(user, dental_case):
 
     assignment = getattr(dental_case, "technician_assignment", None)
     return assignment is not None and assignment.technician_id == user.id
+
+
+def can_view_consumption_report(user):
+    """
+    Quien puede revisar el consumo de materiales: superusuarios y
+    el administrador del laboratorio, que es quien ve los reportes (FR-16).
+    """
+
+    return can(user, Operation.VIEW_REPORTS)

@@ -3,6 +3,8 @@ import logging
 from django.db import transaction
 from django.utils import timezone
 
+from apps.notifications.services import NotificationService
+
 from .exceptions import DashboardMetricsError
 from .models import DentalCase, TechnicianAssignment, DeliveryRegistration
 from .selectors import DentalCaseSelector
@@ -62,7 +64,7 @@ class DentalCaseService:
             raise DashboardMetricsError(
                 "The production indicators could not be loaded."
             ) from error
-    
+
     @staticmethod
     def get_all():
         return DentalCaseSelector.get_all()
@@ -196,6 +198,8 @@ class DentalCaseService:
                 )
             )
 
+        previous_label = case.get_status_display()
+
         case.status = new_status
 
         case.save(
@@ -204,6 +208,9 @@ class DentalCaseService:
                 "updated_at",
             ]
         )
+
+        # FR-12: avisa a los usuarios involucrados del nuevo estado.
+        NotificationService.notify_case_status_change(case, previous_label)
 
         return case
 
@@ -225,11 +232,15 @@ class DentalCaseService:
             raise ValueError("This case has already received a laboratory decision.")
         if not reason or not reason.strip():
             raise ValueError("A reason is required to reject a dental case.")
+        previous_label = case.get_status_display()
         case.acceptance_status = DentalCase.AcceptanceStatus.REJECTED
         case.rejection_reason = reason.strip()
         case.rejected_at = timezone.now()
         case.status = DentalCase.Status.REJECTED
         case.save(update_fields=["acceptance_status", "rejection_reason", "rejected_at", "status", "updated_at"])
+
+        # FR-12: el rechazo tambien cambia el estado del caso.
+        NotificationService.notify_case_status_change(case, previous_label)
         return case
 
     @staticmethod
@@ -274,8 +285,8 @@ class DentalCaseService:
     @transaction.atomic
     def mark_as_completed(case):
         """
-        FR-27: Marca un caso como completado.
-        Registra la fecha de completación y cambia el estado a COMPLETED.
+        FR-27: marks a case as completed.
+        Changes the status to COMPLETED.
         """
         if case.status != DentalCase.Status.IN_PROGRESS:
             raise ValueError("Only in-progress cases can be marked as completed.")
@@ -286,8 +297,8 @@ class DentalCaseService:
     @transaction.atomic
     def register_delivery(case, destination_clinic, registered_by, notes=""):
         """
-        FR-27: Registra la entrega de un caso completado.
-        Cambia el estado a DELIVERED y crea el registro de entrega.
+        FR-27: registers the delivery of a completed case.
+        Changes the status to DELIVERED and creates the delivery record.
         """
         if case.status != DentalCase.Status.COMPLETED:
             raise ValueError("Only completed cases can be delivered.")

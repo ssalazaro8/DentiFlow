@@ -1,0 +1,4 @@
+<a class="nav-link{% if path == '/notifications/' %} active{% endif %}" href="{% url 'notification_list' %}">
+    <i class="fas fa-bell me-1"></i>Notifications
+    {% if unread_count %}<span class="badge rounded-pill bg-danger ms-1">{{ unread_count }}</span>{% endif %}
+</a>

@@ -8,8 +8,12 @@ from .selectors import StockAlertSelector
 from apps.dental_cases.models import DentalCase
 
 from .forms import MaterialConsumptionForm
-from .permissions import can_register_consumption
-from .services import MaterialConsumptionService, MaterialService
+from .permissions import can_register_consumption, can_view_consumption_report
+from .services import (
+    ConsumptionReportService,
+    MaterialConsumptionService,
+    MaterialService,
+)
 
 def material_list(request):
 
@@ -26,6 +30,7 @@ def material_list(request):
             "materials": materials,
             "active_alerts": active_alerts,
             "alerted_ids": alerted_ids,
+            "can_view_report": can_view_consumption_report(request.user),
         }
     )
 
@@ -83,3 +88,19 @@ def register_material_consumption(request, case_id):
         messages.error(request, "Select a material and enter a quantity greater than zero.")
 
     return redirect("dental_case_detail", case_id=case_id)
+
+
+@login_required
+def consumption_report(request):
+    """Reporte de consumo de materiales para el gerente del laboratorio."""
+
+    if not can_view_consumption_report(request.user):
+        raise PermissionDenied(
+            "You are not authorized to review the consumption of materials."
+        )
+
+    return render(
+        request,
+        "inventory/consumption_report.html",
+        ConsumptionReportService.build(),
+    )
