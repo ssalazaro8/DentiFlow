@@ -727,22 +727,26 @@ class MenuTests(TestCase):
         esperado = {
             "admin": {
                 "Dashboard", "Cases", "Create Case",
-                "Laboratory Inbox", "Clinics", "Labs", "Workflow",
-                "Inventory", "Reports", "Laboratory", "Workflow Stages",
-                "Register User",
+                "Laboratory Inbox", "Delivery Calendar", "Clinics", "Labs", "Workflow",
+                "Inventory", "Reports", "Operational Reports",
+                "Laboratory Analytics", "Material Consumption",
+                "Laboratory", "Workflow Stages", "Register User",
             },
             "recepcion": {
                 "Cases", "Create Case", "Laboratory Inbox",
-                "Clinics", "Labs", "Workflow",
+                "Delivery Calendar", "Clinics", "Labs", "Workflow",
             },
             "tecnico": {
-                "Cases", "Laboratory Inbox", "Clinics",
-                "Labs", "Workflow", "Inventory",
+                "Cases", "Laboratory Inbox", "Delivery Calendar",
+                "Clinics", "Labs", "Workflow", "Inventory",
             },
             "clinica": {
-                "Cases", "List Cases", "Create Case", "My Clinic", "Labs",
+                "Cases", "List Cases", "Create Case", "Delivery Calendar",
+                "My Clinic", "Labs",
             },
-            "particular": {"Cases", "List Cases", "Create Case", "Labs"},
+            "particular": {
+                "Cases", "List Cases", "Create Case", "Delivery Calendar", "Labs",
+            },
         }
 
         for cuenta, opciones in esperado.items():

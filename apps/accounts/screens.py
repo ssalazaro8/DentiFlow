@@ -28,6 +28,8 @@ SCREEN_OPERATIONS = {
     "material_update_stock": Operation.MANAGE_INVENTORY,
     "operational_reports": Operation.VIEW_REPORTS,
     "download_report": Operation.VIEW_REPORTS,
+    "laboratory_analytics": Operation.VIEW_REPORTS,
+    "consumption_report": Operation.VIEW_REPORTS,
     "workflow_stage_list": Operation.CONFIGURE_LABORATORY,
     "workflow_stage_create": Operation.CONFIGURE_LABORATORY,
     "workflow_stage_edit": Operation.CONFIGURE_LABORATORY,
@@ -54,6 +56,7 @@ MENU = [
             ("List Cases", "fa-list", "dental_case_list", OUTSIDE_LABORATORY, None),
             ("Create Case", "fa-plus", "dental_case_create", Operation.CREATE_CASES, None),
             ("Laboratory Inbox", "fa-inbox", "laboratory_case_inbox", Operation.VIEW_CASES, "laboratory"),
+            ("Delivery Calendar", "fa-calendar-days", "delivery_calendar", EVERYBODY, None),
         ],
         None, None, "/cases/",
     ),
@@ -62,7 +65,14 @@ MENU = [
     ("Labs", "fa-flask", "laboratory_list", EVERYBODY, None, "/laboratories/"),
     ("Workflow", "fa-stream", "workflow_list", Operation.VIEW_CASES, None, "/workflow/"),
     ("Inventory", "fa-cubes", "material_list", Operation.MANAGE_INVENTORY, None, "/inventory/"),
-    ("Reports", "fa-chart-bar", "operational_reports", Operation.VIEW_REPORTS, None, "/reports/"),
+    (
+        "Reports", "fa-chart-bar", [
+            ("Operational Reports", "fa-table", "operational_reports", Operation.VIEW_REPORTS, None),
+            ("Laboratory Analytics", "fa-chart-line", "laboratory_analytics", Operation.VIEW_REPORTS, None),
+            ("Material Consumption", "fa-chart-column", "consumption_report", Operation.VIEW_REPORTS, None),
+        ],
+        None, None, "/reports/",
+    ),
     (
         "Laboratory", "fa-cog", [
             ("Workflow Stages", "fa-list-ol", "workflow_stage_list", Operation.CONFIGURE_LABORATORY, "laboratory"),
@@ -88,6 +98,14 @@ def _is_active(label, prefix, path):
 
     if label == "Workflow":
         return path.startswith(prefix) and not stages
+
+    consumption = path.startswith("/inventory/consumption-report/")
+
+    if label == "Inventory":
+        return path.startswith(prefix) and not consumption
+
+    if label == "Reports":
+        return path.startswith(prefix) or consumption
 
     if label == "Laboratory":
         return path.startswith(prefix) or stages
