@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -16,8 +18,41 @@ from apps.dental_cases.services import DentalCaseService
 from apps.dental_cases.views import _can_view_case
 from .forms import WorkflowForm, WorkflowStageForm, WorkflowUpdateForm
 from .models import Workflow, WorkflowUpdate
-from .selectors import WorkflowStageSelector
+from .selectors import WorkflowStageSelector, WorkflowUpdateSelector
 from .services import WorkflowService, WorkflowStageService
+
+
+def _parse_date(value):
+    try:
+        return date.fromisoformat(value or "")
+    except ValueError:
+        return None
+
+
+def stage_analytics(request):
+    service_type = request.GET.get("service_type", "")
+    if service_type not in dict(DentalCase.SERVICE_TYPES):
+        service_type = ""
+    date_from = _parse_date(request.GET.get("date_from"))
+    date_to = _parse_date(request.GET.get("date_to"))
+
+    stages = WorkflowUpdateSelector.get_average_stage_durations(service_type, date_from, date_to)
+    slowest = max(stages, key=lambda stage: stage["average"], default=None)
+    for stage in stages:
+        stage["slowest"] = stage is slowest
+        stage["percent"] = round(stage["average"] / slowest["average"] * 100) if slowest and slowest["average"] else 0
+
+    return render(
+        request,
+        "workflow/analytics.html",
+        {
+            "stages": stages,
+            "service_types": DentalCase.SERVICE_TYPES,
+            "service_type": service_type,
+            "date_from": date_from,
+            "date_to": date_to,
+        },
+    )
 
 
 def workflow_list(request):

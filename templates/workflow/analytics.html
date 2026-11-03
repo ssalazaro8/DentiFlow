@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load case_filters %}
+
+{% block title %}Stage analytics - DentiFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chart-bar me-2"></i>Production stage analytics</h1>
+    <a class="btn btn-outline-secondary" href="{% url 'workflow_list' %}">Back to workflow</a>
+</div>
+
+<form method="get" class="card card-body shadow-sm mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Service type</label>
+            <select name="service_type" class="form-select">
+                <option value="">All services</option>
+                {% for code, label in service_types %}
+                <option value="{{ code }}" {% if code == service_type %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">From</label>
+            <input type="date" name="date_from" class="form-control" value="{{ date_from|date:'Y-m-d' }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">To</label>
+            <input type="date" name="date_to" class="form-control" value="{{ date_to|date:'Y-m-d' }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </div>
+    </div>
+</form>
+
+{% if stages %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p class="text-muted small mb-4">Average time cases stayed in each stage, from the recorded stage changes.</p>
+        {% for stage in stages %}
+        <div class="mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+                <span>{{ stage.label }} <span class="text-muted">({{ stage.cases }} {{ stage.cases|pluralize:"case,cases" }})</span></span>
+                <span class="fw-semibold">
+                    {{ stage.average|format_elapsed_time }}
+                    {% if stage.slowest %}<span class="badge bg-danger ms-2">Slowest stage</span>{% endif %}
+                </span>
+            </div>
+            <div class="progress" style="height: 1.5rem;">
+                <div class="progress-bar {% if stage.slowest %}bg-danger{% else %}bg-primary{% endif %}" style="width: {{ stage.percent }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">No stage changes match the selected filters.</div>
+{% endif %}
+{% endblock %}

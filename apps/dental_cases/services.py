@@ -1,6 +1,6 @@
 import calendar
 import logging
-from datetime import date
+from datetime import date, timedelta
 
 from django.db import transaction
 from django.utils import timezone
@@ -262,6 +262,40 @@ class DentalCaseService:
     @transaction.atomic
     def remove_technician_assignment(case):
         TechnicianAssignment.objects.filter(dental_case=case).delete()
+
+    @staticmethod
+    def get_technician_workload(laboratory):
+        """
+        FR-29: active and recently completed cases of each technician.
+        """
+        since = timezone.now() - timedelta(days=30)
+        finished = [DentalCase.Status.DELIVERED, DentalCase.Status.CANCELLED, DentalCase.Status.REJECTED]
+        rows = []
+        for technician in laboratory.technicians.order_by("first_name", "last_name", "username"):
+            assignments = TechnicianAssignment.objects.filter(technician=technician)
+            cases = []
+            for assignment in assignments.select_related("dental_case__workflow").order_by("-assigned_at"):
+                workflow = getattr(assignment.dental_case, "workflow", None)
+                cases.append({
+                    "case": assignment.dental_case,
+                    "stage": workflow.get_current_stage_display() if workflow else "Not started",
+                    "progress": workflow.progress_percentage if workflow else 0,
+                })
+            # shortcut: updated_at stands in for the completion date, add a completed_at field for an exact count
+            rows.append({
+                "technician": technician,
+                "cases": cases,
+                "active": assignments.exclude(dental_case__status__in=finished).count(),
+                "completed_30d": assignments.filter(
+                    dental_case__status__in=[DentalCase.Status.COMPLETED, DentalCase.Status.DELIVERED],
+                    dental_case__updated_at__gte=since,
+                ).count(),
+            })
+        busiest = max((row["active"] for row in rows), default=0)
+        for row in rows:
+            row["idle"] = row["active"] == 0
+            row["busiest"] = busiest > 0 and row["active"] == busiest
+        return rows
 
     @staticmethod
     @transaction.atomic

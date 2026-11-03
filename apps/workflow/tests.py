@@ -1,12 +1,15 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.dental_cases.models import DentalCase
 from apps.dental_cases.services import DentalCaseService
 from apps.laboratories.models import Laboratory
+from .models import WorkflowUpdate
+from .selectors import WorkflowUpdateSelector
 from .services import WorkflowService
 
 
@@ -211,3 +214,28 @@ class CaseStatusHistoryTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
+
+
+class StageAnalyticsTests(TestCase):
+    def test_average_stage_time_uses_consecutive_changes(self):
+        laboratory = Laboratory.objects.create(
+            name="Stage Lab", email="stage@example.com", phone="1", city="Medellin",
+            address="Street 1", service="CROWN",
+        )
+        dental_case = DentalCase.objects.create(
+            case_number="DF-300", clinic_name="Clinic", requested_by="Dr. Test",
+            laboratory=laboratory, service_type="CROWN", description="Case", due_date=date.today(),
+            acceptance_status=DentalCase.AcceptanceStatus.ACCEPTED,
+        )
+        workflow = WorkflowService.create({"dental_case": dental_case, "current_stage": "RECEIVED", "comments": "", "progress_percentage": 0})
+        WorkflowService.update_stage(workflow, "DESIGN", 25, "", None)
+        WorkflowService.update_stage(workflow, "QC", 80, "", None)
+
+        start = timezone.now() - timedelta(days=1)
+        for update, moment in zip(workflow.updates.order_by("pk"), [start, start + timedelta(hours=2), start + timedelta(hours=5)]):
+            WorkflowUpdate.objects.filter(pk=update.pk).update(created_at=moment)
+
+        stages = {row["stage"]: row for row in WorkflowUpdateSelector.get_average_stage_durations()}
+        self.assertEqual(stages["RECEIVED"]["average"], timedelta(hours=2))
+        self.assertEqual(stages["DESIGN"]["average"], timedelta(hours=3))
+        self.assertNotIn("QC", stages)

@@ -47,6 +47,7 @@ urlpatterns = [
         name="dental_case_delete",
     ),
     path("laboratories/<int:laboratory_id>/inbox/", views.laboratory_case_inbox, name="laboratory_case_inbox"),
+    path("laboratories/<int:laboratory_id>/technicians/", views.laboratory_technicians, name="laboratory_technicians"),
     path("clinics/<int:clinic_id>/inbox/", views.clinic_case_inbox, name="clinic_case_inbox"),
     path("<int:case_id>/accept/", views.dental_case_accept, name="dental_case_accept"),
     path("<int:case_id>/reject/", views.dental_case_reject, name="dental_case_reject"),

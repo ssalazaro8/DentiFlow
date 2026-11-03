@@ -184,6 +184,18 @@ def laboratory_case_inbox(request, laboratory_id):
     return _render_case_list(request, dental_cases, laboratory=laboratory)
 
 
+def laboratory_technicians(request, laboratory_id):
+    laboratory = get_object_or_404(Laboratory, pk=laboratory_id)
+    return render(
+        request,
+        "dental_cases/laboratory_technicians.html",
+        {
+            "laboratory": laboratory,
+            "workload": DentalCaseService.get_technician_workload(laboratory),
+        },
+    )
+
+
 def clinic_case_inbox(request, clinic_id):
     """Cases requested by one clinic, among those the user may see."""
     clinic = get_object_or_404(Clinic, pk=clinic_id)
@@ -374,7 +386,7 @@ def technician_assignment(request, case_id):
             verb = "updated" if current_assignment else "assigned"
             messages.success(request, f"Technician {assignment.technician} {verb} successfully.")
             return redirect("dental_case_detail", case_id=case_id)
-    return render(request, "dental_cases/assign_technician.html", {"dental_case": dental_case, "form": form, "assignment": current_assignment})
+    return render(request, "dental_cases/assign_technician.html", {"dental_case": dental_case, "form": form, "assignment": current_assignment, "workload": DentalCaseService.get_technician_workload(dental_case.laboratory)})
 
 
 def technician_assignment_remove(request, case_id):

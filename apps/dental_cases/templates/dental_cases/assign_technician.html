@@ -11,4 +11,34 @@
     </form>
   </div>
 </div>
+
+<div class="card shadow-sm mx-auto mt-4" style="max-width: 650px;">
+  <div class="card-body p-4">
+    <h2 class="h5">Technician workload</h2>
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Technician</th>
+          <th class="text-center">Active cases</th>
+          <th class="text-center">Completed (30 days)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in workload %}
+        <tr class="{% if row.idle %}table-success{% elif row.busiest %}table-warning{% endif %}">
+          <td>{{ row.technician.get_full_name|default:row.technician.username }}</td>
+          <td class="text-center">{{ row.active }}</td>
+          <td class="text-center">{{ row.completed_30d }}</td>
+          <td>
+            {% if row.idle %}<span class="badge bg-success">No active cases</span>{% elif row.busiest %}<span class="badge bg-warning text-dark">Highest workload</span>{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-muted">This laboratory has no technicians yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}
