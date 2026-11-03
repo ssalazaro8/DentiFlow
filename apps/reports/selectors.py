@@ -193,3 +193,24 @@ class ReportSelector:
             )
 
         return rows
+
+
+class AnalyticsSelector:
+    """
+    Read-only queries that feed the laboratory analytics.
+    """
+
+    @staticmethod
+    def get_cases(laboratories=None):
+        """
+        Returns the cases of the given laboratories with their delivery.
+
+        None means every laboratory, which only superusers get.
+        """
+
+        cases = DentalCase.objects.select_related("delivery_registration")
+
+        if laboratories is not None:
+            cases = cases.filter(laboratory__in=laboratories)
+
+        return cases

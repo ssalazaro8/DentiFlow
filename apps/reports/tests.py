@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -7,7 +7,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.dental_cases.models import DentalCase
+from apps.clinics.models import Clinic
+from apps.dental_cases.models import DeliveryRegistration, DentalCase
 from apps.laboratories.models import Laboratory
 from apps.workflow.models import Workflow
 
@@ -28,7 +29,7 @@ def build_laboratory(name, email):
 
 from .exceptions import ReportGenerationError
 from .forms import ReportFilterForm
-from .services import ReportService
+from .services import MONTH, WEEK, AnalyticsService, ReportService
 from .views import OperationalReportsView
 
 
@@ -532,3 +533,175 @@ class LaboratoryScopeTests(TestCase):
 
         self.assertEqual(response["Content-Type"], "text/csv")
         self.assertIn("Total cases,2", contenido)
+
+
+# --- FR-14: laboratory analytics ---
+
+# A Wednesday: its week starts on Monday, October 26.
+HOY = date(2026, 10, 28)
+
+
+def moment(year, month, day, hour=10):
+    return timezone.make_aware(datetime(year, month, day, hour))
+
+
+def deliver(case, delivered_at, user, clinic):
+    """
+    Registers the delivery of a case on a given moment.
+    """
+
+    delivery = DeliveryRegistration.objects.create(
+        dental_case=case,
+        destination_clinic=clinic,
+        registered_by=user,
+    )
+
+    # delivered_at is auto_now_add, so it has to be forced afterwards.
+    DeliveryRegistration.objects.filter(pk=delivery.pk).update(
+        delivered_at=delivered_at
+    )
+
+
+class AnalyticsServiceTests(TestCase):
+    """
+    Indicadores de la analitica del laboratorio (FR-14).
+    """
+
+    def setUp(self):
+
+        self.laboratory = build_laboratory("Lab Propio", "propio@test.com")
+        self.other = build_laboratory("Lab Ajeno", "ajeno@test.com")
+
+        self.user = User.objects.create_user("entregas", password="clave")
+
+        self.clinic = Clinic.objects.create(
+            name="Clinica Sonrisa",
+            nit="900111",
+            email="sonrisa@clinica.com",
+            phone="1",
+            address="Calle 2",
+            city="Medellin",
+            contact_person="Contacto",
+        )
+
+    def build(self, period=WEEK):
+        return AnalyticsService.build(
+            laboratories=[self.laboratory], period=period, today=HOY
+        )
+
+    def test_counts_the_cases_received_each_week(self):
+
+        build_case("A-1", DentalCase.Status.SUBMITTED, moment(2026, 10, 27), laboratory=self.laboratory)
+        build_case("A-2", DentalCase.Status.SUBMITTED, moment(2026, 10, 20), laboratory=self.laboratory)
+        build_case("A-3", DentalCase.Status.SUBMITTED, moment(2026, 10, 21), laboratory=self.laboratory)
+        # Older than the twelve weeks shown.
+        build_case("A-4", DentalCase.Status.SUBMITTED, moment(2026, 6, 1), laboratory=self.laboratory)
+
+        analytics = self.build()
+
+        self.assertEqual(len(analytics["rows"]), 12)
+        self.assertEqual(analytics["rows"][-1]["label"], "Oct 26")
+        self.assertEqual(analytics["rows"][-1]["cases"], 1)
+        self.assertEqual(analytics["rows"][-2]["cases"], 2)
+        self.assertEqual(analytics["summary"]["cases"], 3)
+
+    def test_production_time_and_on_time_deliveries(self):
+
+        a_tiempo = build_case(
+            "B-1", DentalCase.Status.DELIVERED, moment(2026, 10, 19),
+            laboratory=self.laboratory,
+            accepted_at=moment(2026, 10, 20),
+            due_date=date(2026, 10, 28),
+        )
+        tarde = build_case(
+            "B-2", DentalCase.Status.DELIVERED, moment(2026, 10, 19),
+            laboratory=self.laboratory,
+            accepted_at=moment(2026, 10, 22),
+            due_date=date(2026, 10, 25),
+        )
+
+        deliver(a_tiempo, moment(2026, 10, 27), self.user, self.clinic)
+        deliver(tarde, moment(2026, 10, 26), self.user, self.clinic)
+
+        semana = self.build()["rows"][-1]
+
+        self.assertEqual(semana["deliveries"], 2)
+        # 7 days and 4 days.
+        self.assertEqual(semana["average_days"], 5.5)
+        self.assertEqual(semana["on_time_rate"], 50.0)
+
+    def test_groups_by_month(self):
+
+        build_case("C-1", DentalCase.Status.SUBMITTED, moment(2026, 10, 2), laboratory=self.laboratory)
+        build_case("C-2", DentalCase.Status.SUBMITTED, moment(2026, 9, 15), laboratory=self.laboratory)
+
+        analytics = self.build(MONTH)
+
+        self.assertEqual(analytics["period"], MONTH)
+        self.assertEqual(analytics["rows"][-1]["label"], "Oct 2026")
+        self.assertEqual(analytics["rows"][-1]["cases"], 1)
+        self.assertEqual(analytics["rows"][-2]["cases"], 1)
+
+    def test_only_counts_the_users_laboratory(self):
+
+        build_case("D-1", DentalCase.Status.SUBMITTED, moment(2026, 10, 27), laboratory=self.other)
+
+        self.assertFalse(self.build()["has_cases"])
+
+    def test_without_data(self):
+
+        analytics = self.build()
+
+        self.assertFalse(analytics["has_cases"])
+        self.assertFalse(analytics["has_deliveries"])
+        self.assertIsNone(analytics["summary"]["average_days"])
+        self.assertIsNone(analytics["summary"]["on_time_rate"])
+
+
+class AnalyticsViewTests(TestCase):
+    """
+    Solo el administrador del laboratorio abre la analitica (FR-14, FR-16).
+    """
+
+    def setUp(self):
+
+        self.url = reverse("laboratory_analytics")
+        self.laboratory = build_laboratory("Lab Propio", "propio@test.com")
+
+        self.admin = User.objects.create_user("admin_lab", password="clave")
+        self.laboratory.authorized_users.add(self.admin)
+
+        self.technician = User.objects.create_user("tecnico", password="clave")
+        self.laboratory.technicians.add(self.technician)
+
+        build_case("E-1", DentalCase.Status.SUBMITTED, laboratory=self.laboratory)
+
+    def test_admin_sees_the_analytics(self):
+
+        self.client.force_login(self.admin)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["period"], WEEK)
+        self.assertEqual(response.context["summary"]["cases"], 1)
+        self.assertContains(response, "volumeChart")
+
+    def test_month_and_unknown_periods(self):
+
+        self.client.force_login(self.admin)
+
+        self.assertEqual(
+            self.client.get(self.url, {"period": "month"}).context["period"],
+            MONTH,
+        )
+        self.assertEqual(
+            self.client.get(self.url, {"period": "year"}).context["period"],
+            WEEK,
+        )
+
+    def test_technician_cannot_open_it(self):
+
+        self.client.force_login(self.technician)
+
+        self.assertEqual(self.client.get(self.url).status_code, 403)

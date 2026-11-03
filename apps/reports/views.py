@@ -9,7 +9,7 @@ from apps.accounts.permissions import Operation, get_laboratories
 
 from .exceptions import ReportGenerationError
 from .forms import ReportFilterForm
-from .services import ReportService
+from .services import PERIODS, WEEK, AnalyticsService, ReportService
 
 
 def get_allowed_laboratories(user):
@@ -147,3 +147,30 @@ def download_report_view(request, report_type):
     write_csv(report, response)
 
     return response
+
+
+class LaboratoryAnalyticsView(LoginRequiredMixin, TemplateView):
+    """
+    FR-14: displays how the laboratory evolves week by week or month
+    by month, with the data of the user's own laboratory only.
+    """
+
+    template_name = "reports/laboratory_analytics.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+
+        period = self.request.GET.get("period", WEEK)
+
+        if period not in PERIODS:
+            period = WEEK
+
+        context.update(
+            AnalyticsService.build(
+                laboratories=get_allowed_laboratories(self.request.user),
+                period=period,
+            )
+        )
+
+        return context
