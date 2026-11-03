@@ -1,4 +1,6 @@
+import calendar
 import logging
+from datetime import date
 
 from django.db import transaction
 from django.utils import timezone
@@ -314,3 +316,98 @@ class DentalCaseService:
         )
 
         return delivery
+
+
+# --- FR-34: delivery calendar ---
+
+OVERDUE = "overdue"
+DELIVERED = "delivered"
+UPCOMING = "upcoming"
+
+
+def parse_month(value, today):
+    """
+    Returns the first day of a month written as YYYY-MM, or of the
+    current month when the value is missing or not valid.
+    """
+
+    try:
+        year, month = (int(part) for part in value.split("-"))
+        return date(year, month, 1)
+    except (AttributeError, TypeError, ValueError):
+        return today.replace(day=1)
+
+
+def _shift_month(first_day, months):
+
+    index = first_day.year * 12 + first_day.month - 1 + months
+
+    return date(index // 12, index % 12 + 1, 1)
+
+
+def delivery_state(dental_case, today):
+    """
+    Delivered cases are done; the rest are overdue once their due date
+    has passed.
+    """
+
+    if dental_case.status == DentalCase.Status.DELIVERED:
+        return DELIVERED
+
+    if dental_case.due_date < today:
+        return OVERDUE
+
+    return UPCOMING
+
+
+class DeliveryCalendarService:
+    """
+    Places the visible cases of a month on their due date (FR-34).
+    """
+
+    @staticmethod
+    def build(cases, month=None, today=None):
+
+        today = today or timezone.localdate()
+        first_day = month or today.replace(day=1)
+
+        weeks = calendar.Calendar(firstweekday=0).monthdatescalendar(
+            first_day.year, first_day.month
+        )
+
+        due = DentalCaseSelector.get_due_between(cases, weeks[0][0], weeks[-1][-1])
+
+        by_day = {}
+        totals = {OVERDUE: 0, DELIVERED: 0, UPCOMING: 0}
+
+        for dental_case in due:
+
+            state = delivery_state(dental_case, today)
+            by_day.setdefault(dental_case.due_date, []).append(
+                {"case": dental_case, "state": state}
+            )
+
+            if dental_case.due_date.month == first_day.month:
+                totals[state] += 1
+
+        return {
+            "month": first_day,
+            "previous_month": _shift_month(first_day, -1).strftime("%Y-%m"),
+            "next_month": _shift_month(first_day, 1).strftime("%Y-%m"),
+            "current_month": today.strftime("%Y-%m"),
+            "is_current_month": first_day == today.replace(day=1),
+            "weeks": [
+                [
+                    {
+                        "date": day,
+                        "in_month": day.month == first_day.month,
+                        "is_today": day == today,
+                        "cases": by_day.get(day, []),
+                    }
+                    for day in week
+                ]
+                for week in weeks
+            ],
+            "totals": totals,
+            "total": sum(totals.values()),
+        }

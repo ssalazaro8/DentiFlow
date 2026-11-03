@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.generic import TemplateView
 
 from apps.laboratories.models import Laboratory
@@ -27,7 +28,7 @@ from .permissions import (
     require_case_management,
 )
 from .selectors import get_case_file_by_id
-from .services import DentalCaseService
+from .services import DeliveryCalendarService, DentalCaseService, parse_month
 
 
 def _require_laboratory_access(request, dental_case):
@@ -525,4 +526,25 @@ def register_delivery(request, case_id):
             "dental_case": dental_case,
             "clinics": clinics,
         },
+    )
+
+
+# --- FR-34: calendario de entregas ---
+
+@login_required
+def delivery_calendar(request):
+    """
+    Displays a month with the visible cases placed on their due date.
+    """
+
+    today = timezone.localdate()
+
+    return render(
+        request,
+        "dental_cases/calendar.html",
+        DeliveryCalendarService.build(
+            DentalCaseService.get_visible_cases(request.user),
+            month=parse_month(request.GET.get("month"), today),
+            today=today,
+        ),
     )

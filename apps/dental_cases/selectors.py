@@ -136,6 +136,24 @@ class DentalCaseSelector:
             'cases_by_stage': cases_by_stage
         }
 
+    @staticmethod
+    def get_due_between(cases, first_day, last_day):
+        """
+        FR-34: returns the cases due between two days, leaving out the
+        ones that will never be delivered (cancelled or rejected).
+        """
+
+        return (
+            cases.filter(due_date__range=(first_day, last_day))
+            .exclude(
+                status__in=[
+                    DentalCase.Status.CANCELLED,
+                    DentalCase.Status.REJECTED,
+                ]
+            )
+            .order_by("due_date", "case_number")
+        )
+
 
 # --- FR-24: acceso a los archivos adjuntos del caso ---
 
